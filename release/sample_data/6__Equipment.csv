@@ -1,0 +1,29 @@
+Equipment Details,,,,,,,,
+Rated specifications of key equipment,,,,,,,,
+Equipment,Rated Capacity / Power,Operating Range,Key Dimensions,,,,,
+Mixing Tank,"
+2500 LTR /7.45
+1500 LTR /7.45
+2000 LTR /2.2
+10000 LTR /37.3
+",Level 75-90 %,"
+D-1.39m, H-1.53m
+D-1.24m,H-1.4m
+D-1.4M,H-1.43M
+D-2.3m ,H-3m
+",,,,,
+Agitator,"2500 LTR /56
+1000 LTR /18.6
+1000 LTR/30",1AP / 4AP: 1100-1400 rpm; 2AP: 73-93 rpm,"D- 1.63m  ,H-1.83m  
+D-  1.2 m  ,H-1.1m 
+D-  1.2m.H-1.1m                                                                                     ",,,,,
+Feed Pump,AODD,Charging flow 22-71 kg/min,N/A,,,,,
+Control Valve,NILL,0-100 % open,N/A,,,,,
+Temperature Sensor,Pt100 RTD,0-100 °C,N/A,,,,,
+Pressure Transmitter,4-20 mA,0-2.5 bar (abs),N/A,,,,,
+Level Transmitter,4-20 mA,0-100 %,N/A,,,,,
+Line Configuration,,,,,,,,
+Line,Paint Type,Agitator Power (kW),Agitator Speed Setpoint (rpm),Supply Voltage (V),Power Factor,Rated Motor Current (A),Charging Flow Setpoint (kg/min),Discharge Flow Setpoint (kg/min)
+1AP,Water-based,18.6,1200,415,0.85,30.4,38,45
+2AP,Solvent-based,30,80,415,0.85,49.1,52,60
+4AP,Water-based,56,1200,415,0.85,91.7,64,68

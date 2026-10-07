@@ -1,0 +1,62 @@
+# Compiled Binaries & Executables
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+build/bin/
+PaintWise
+paintwise
+release/*.exe
+release/*.zip
+PaintWise_v2.4.0_Windows_x64.zip
+
+# Output / Build artifacts
+dist/
+frontend/dist/
+frontend/build/
+build/windows/
+build/darwin/
+build/linux/
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Logs & Database
+*.log
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE & Editor configurations
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# Environment & Local Config
+.env
+.env.local
+.env.*.local
+*.local
+
+# Temporary files
+tmp/
+temp/

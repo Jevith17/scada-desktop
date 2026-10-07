@@ -1,0 +1,81 @@
+{
+  "equipment": [
+    {
+      "equipment": "Mixing Tank",
+      "rated_capacity_power": "2500 LTR /7.45\n1500 LTR /7.45\n2000 LTR /2.2\n10000 LTR /37.3",
+      "operating_range": "Level 75-90 %",
+      "key_dimensions": "D-1.39m, H-1.53m\nD-1.24m,H-1.4m\nD-1.4M,H-1.43M\nD-2.3m ,H-3m"
+    },
+    {
+      "equipment": "Agitator",
+      "rated_capacity_power": "2500 LTR /56\n1000 LTR /18.6\n1000 LTR/30",
+      "operating_range": "1AP / 4AP: 1100-1400 rpm; 2AP: 73-93 rpm",
+      "key_dimensions": "D- 1.63m  ,H-1.83m  \nD-  1.2 m  ,H-1.1m \nD-  1.2m.H-1.1m"
+    },
+    {
+      "equipment": "Feed Pump",
+      "rated_capacity_power": "AODD",
+      "operating_range": "Charging flow 22-71 kg/min",
+      "key_dimensions": "N/A"
+    },
+    {
+      "equipment": "Control Valve",
+      "rated_capacity_power": "NILL",
+      "operating_range": "0-100 % open",
+      "key_dimensions": "N/A"
+    },
+    {
+      "equipment": "Temperature Sensor",
+      "rated_capacity_power": "Pt100 RTD",
+      "operating_range": "0-100 \u00b0C",
+      "key_dimensions": "N/A"
+    },
+    {
+      "equipment": "Pressure Transmitter",
+      "rated_capacity_power": "4-20 mA",
+      "operating_range": "0-2.5 bar (abs)",
+      "key_dimensions": "N/A"
+    },
+    {
+      "equipment": "Level Transmitter",
+      "rated_capacity_power": "4-20 mA",
+      "operating_range": "0-100 %",
+      "key_dimensions": "N/A"
+    }
+  ],
+  "lines": [
+    {
+      "line": "1AP",
+      "paint_type": "Water-based",
+      "agitator_power_kW": 18.6,
+      "agitator_speed_rpm": 1200.0,
+      "supply_voltage_V": 415.0,
+      "power_factor": 0.85,
+      "rated_current_A": 30.4,
+      "charging_flow_kg_min": 38.0,
+      "discharge_flow_kg_min": 45.0
+    },
+    {
+      "line": "2AP",
+      "paint_type": "Solvent-based",
+      "agitator_power_kW": 30.0,
+      "agitator_speed_rpm": 80.0,
+      "supply_voltage_V": 415.0,
+      "power_factor": 0.85,
+      "rated_current_A": 49.1,
+      "charging_flow_kg_min": 52.0,
+      "discharge_flow_kg_min": 60.0
+    },
+    {
+      "line": "4AP",
+      "paint_type": "Water-based",
+      "agitator_power_kW": 56.0,
+      "agitator_speed_rpm": 1200.0,
+      "supply_voltage_V": 415.0,
+      "power_factor": 0.85,
+      "rated_current_A": 91.7,
+      "charging_flow_kg_min": 64.0,
+      "discharge_flow_kg_min": 68.0
+    }
+  ]
+}

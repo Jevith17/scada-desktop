@@ -1,0 +1,84 @@
+{
+  "qc_results": [
+    {
+      "batch_id": "1AP/0191/26-27",
+      "viscosity_cP": 6100.0,
+      "qc_result": "Pass",
+      "density_g_ml": 1.22,
+      "solids_pct": 45.0,
+      "pH": 8.5
+    },
+    {
+      "batch_id": "1AP/0187/26-27",
+      "viscosity_cP": 6150.0,
+      "qc_result": "Pass",
+      "density_g_ml": 1.18,
+      "solids_pct": 38.0,
+      "pH": 8.6
+    },
+    {
+      "batch_id": "1AP/0183/26-27",
+      "viscosity_cP": 6000.0,
+      "qc_result": "Pass",
+      "density_g_ml": 1.26,
+      "solids_pct": 40.0,
+      "pH": 8.65
+    },
+    {
+      "batch_id": "1AP/0168/26-27",
+      "viscosity_cP": 6300.0,
+      "qc_result": "Pass",
+      "density_g_ml": 1.16,
+      "solids_pct": 37.0,
+      "pH": 8.56
+    },
+    {
+      "batch_id": "1AP/0150/26-27",
+      "viscosity_cP": 6000.0,
+      "qc_result": "Pass",
+      "density_g_ml": 1.2,
+      "solids_pct": 42.0,
+      "pH": 8.5
+    },
+    {
+      "batch_id": "2AP/0646/26-27",
+      "viscosity_cP": 1100.0,
+      "qc_result": "Pass",
+      "density_g_ml": 1.17,
+      "solids_pct": 50.0,
+      "pH": null
+    },
+    {
+      "batch_id": "2AP/641/26-27",
+      "viscosity_cP": 1050.0,
+      "qc_result": "Pass",
+      "density_g_ml": 0.98,
+      "solids_pct": 52.0,
+      "pH": null
+    },
+    {
+      "batch_id": "2AP/415/26-27",
+      "viscosity_cP": 1000.0,
+      "qc_result": "Pass",
+      "density_g_ml": 1.18,
+      "solids_pct": 53.0,
+      "pH": null
+    },
+    {
+      "batch_id": "2AP/591/26-27",
+      "viscosity_cP": 1100.0,
+      "qc_result": "Pass",
+      "density_g_ml": 1.12,
+      "solids_pct": 55.0,
+      "pH": null
+    },
+    {
+      "batch_id": "4AP/0093/26-27",
+      "viscosity_cP": 8000.0,
+      "qc_result": "Pass",
+      "density_g_ml": 1.33,
+      "solids_pct": 42.0,
+      "pH": 8.6
+    }
+  ]
+}

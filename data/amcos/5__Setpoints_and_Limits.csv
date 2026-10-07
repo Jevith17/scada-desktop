@@ -1,0 +1,18 @@
+Setpoints & Operating Ranges,,,,,,,
+Normal operating setpoint and min/max range for each parameter,,,,,,,
+Parameter,Unit,Setpoint,Min,Max,Alarm Low,Alarm High,Applies To
+Batch Mass,kg,1395.1,726,1933,605.3,2053.7,All lines
+Temperature,°C,30,25,35,24,36,All lines
+Tank Level,%,85,75,90,73.5,91.5,All lines
+Agitator Speed,rpm,1200,1100,1400,1070,1430,"1AP, 4AP"
+Flow Rate,kg/min,45,22,71,17.1,75.9,All lines
+Pressure,bar,1.05,1,1.2,0.98,1.22,All lines
+Viscosity (1AP),cP,6110,5500,6500,5400,6600,1AP
+Viscosity (2AP),cP,1062.5,900,1200,870,1230,2AP
+Viscosity (4AP),cP,8000,7500,8500,7400,8600,4AP
+Agitator Speed (2AP),rpm,80,73,93,71,95,2AP
+Motor Power (1AP),kW,15.8,11.2,18.6,10.459999999999999,19.340000000000003,1AP
+Motor Power (2AP),kW,25.5,18,30,16.8,31.2,2AP
+Motor Power (4AP),kW,47.6,33.6,56,31.360000000000003,58.24,4AP
+pH (water-based),—,8.568333333333333,8.2,9,8.12,9.08,"1AP, 4AP"
+Mixing Duration,min,189,140,240,130,250,All lines

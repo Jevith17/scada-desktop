@@ -1,0 +1,13 @@
+Plant-Reported Values (Per Batch),,,,,
+Single operating values reported by the plant for each batch,,,,,
+Batch ID,Tank Level (%),Temperature (°C),Agitator Speed (rpm),Motor Power (kW),Valve Position (% open)
+1AP/0191/26-27,80,30,1200,18.6,0
+1AP/0187/26-27,90,30,1200,18.6,0
+1AP/0183/26-27,90,30,1200,18.6,0
+1AP/0168/26-27,90,30,1200,18.6,0
+1AP/0150/26-27,90,30,1200,18.6,0
+2AP/0646/26-27,90,30,80,30,0
+2AP/641/26-27,90,30,80,30,0
+2AP/415/26-27,90,30,80,30,0
+2AP/591/26-27,90,30,80,30,0
+4AP/0093/26-27,90,30,1200,56,0

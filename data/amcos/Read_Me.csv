@@ -1,0 +1,11 @@
+Paint Manufacturing – Data Request for Process Modelling & Simulation,
+Tabs in this workbook,
+1. Batch Info,"Batch ID, product, size, timing, durations, final QC"
+2. Process Data,"1-min time-series: level, flows, temperature, rpm, current/power, pressure, viscosity, pH, valve, equipment status"
+2a. Plant Batch Values,Plant-reported operating values per batch
+3. Material Additions,Raw material additions per batch with timing
+4. Quality Results,Final QC results and specification check
+5. Setpoints & Limits,"Setpoints, operating ranges and alarm limits"
+6. Equipment,Equipment details and line configuration
+7. Fault Library,"Fault definitions, detection rules and injection scenarios"
+8. General Info,Plant and dataset information

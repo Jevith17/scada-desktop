@@ -1,0 +1,22 @@
+Fault Library,,,,,,,,,,,
+Fault definitions and detection parameters used by the diagnosis engine,,,,,,,,,,,
+Fault Code,Fault Description,Affected Equipment,Primary Variable,Deviation Type,Magnitude,Ramp Time (min),Active Phase,Secondary Variables Affected,Detection Rule,Severity,Evidence Statement
+TEMP_SENSOR_DRIFT,Temperature sensor reading drifts away from actual value,Temperature Sensor,Temperature,Ramp (drift),+3.0 °C,30,MIXING,Viscosity (temperature-compensated value),|Temperature - model estimate| > 1.5 °C for 3 consecutive min,WARNING,Temperature reading deviates from model estimate while motor power and viscosity remain normal
+AGITATOR_MOTOR_MALFUNCTION,Agitator speed falls below setpoint with abnormal motor load,Agitator,Agitator Speed,Ramp (decrease),-12 % of setpoint,5,MIXING,"Motor Power, Motor Current, Viscosity",Speed < setpoint - 10 % for 2 consecutive min,CRITICAL,RPM decreased 12% below setpoint; motor power trend abnormal; viscosity trend deviating from expected
+FEED_PUMP_MALFUNCTION,Feed pump delivers reduced flow during charging,Feed Pump,Inlet Flow,Step (decrease),-40 % of flow setpoint,2,CHARGING,"Tank Level, Batch Mass, Pressure",Inlet flow < 80 % of setpoint for 2 consecutive min,CRITICAL,Inlet flow below setpoint while valve position normal; tank level rising slower than expected
+CONTROL_VALVE_MALFUNCTION,Valve position does not follow demanded opening,Control Valve,Valve Position,Step (stuck),Stuck at 50 % open,1,CHARGING,"Inlet Flow, Tank Level",|Demanded - actual valve position| > 10 % for 2 consecutive min,WARNING,Valve position not following demand; inlet flow inconsistent with valve opening
+TANK_LEAKAGE,Unaccounted material loss from tank,Mixing Tank,Tank Level,Ramp (decrease),-0.15 % level/min,10,MIXING,"Batch Mass, Pressure",Mass balance residual > 1.5 % of batch mass,CRITICAL,Tank level falling with no outlet flow; mass balance does not close
+VISCOSITY_QUALITY_DEVIATION,Viscosity moves outside target specification,Product Quality,Viscosity,Ramp (increase),+12 % above target maximum,20,MIXING,"Temperature, Agitator Speed",Viscosity outside target range for 5 consecutive min,WARNING,Viscosity outside specification range; temperature and agitator speed within limits
+Fault Injection Scenarios,,,,,,,,,,,
+Scenario ID,Fault Code,Batch ID,Injection Time (min from batch start),,,,,,,,
+SC-01,TEMP_SENSOR_DRIFT,1AP/0191/26-27,96,,,,,,,,
+SC-02,AGITATOR_MOTOR_MALFUNCTION,1AP/0187/26-27,75,,,,,,,,
+SC-03,FEED_PUMP_MALFUNCTION,2AP/0646/26-27,12,,,,,,,,
+SC-04,CONTROL_VALVE_MALFUNCTION,2AP/641/26-27,10,,,,,,,,
+SC-05,TANK_LEAKAGE,4AP/0093/26-27,122,,,,,,,,
+SC-06,VISCOSITY_QUALITY_DEVIATION,1AP/0183/26-27,131,,,,,,,,
+Confidence Levels,,,,,,,,,,,
+Confidence,Rule,,,,,,,,,,
+POSSIBLE,1 evidence indicator active,,,,,,,,,,
+PROBABLE,2 evidence indicators active,,,,,,,,,,
+CONFIRMED,3 or more evidence indicators active,,,,,,,,,,

@@ -1,0 +1,126 @@
+{
+  "faults": [
+    {
+      "code": "TEMP_SENSOR_DRIFT",
+      "description": "Temperature sensor reading drifts away from actual value",
+      "affected_equipment": "Temperature Sensor",
+      "primary_variable": "Temperature",
+      "deviation_type": "Ramp (drift)",
+      "magnitude": "+3.0 \u00b0C",
+      "ramp_time_min": 30.0,
+      "active_phase": "MIXING",
+      "secondary_variables": "Viscosity (temperature-compensated value)",
+      "detection_rule": "|Temperature - model estimate| > 1.5 \u00b0C for 3 consecutive min",
+      "severity": "WARNING",
+      "evidence_statement": "Temperature reading deviates from model estimate while motor power and viscosity remain normal"
+    },
+    {
+      "code": "AGITATOR_MOTOR_MALFUNCTION",
+      "description": "Agitator speed falls below setpoint with abnormal motor load",
+      "affected_equipment": "Agitator",
+      "primary_variable": "Agitator Speed",
+      "deviation_type": "Ramp (decrease)",
+      "magnitude": "-12 % of setpoint",
+      "ramp_time_min": 5.0,
+      "active_phase": "MIXING",
+      "secondary_variables": "Motor Power, Motor Current, Viscosity",
+      "detection_rule": "Speed < setpoint - 10 % for 2 consecutive min",
+      "severity": "CRITICAL",
+      "evidence_statement": "RPM decreased 12% below setpoint; motor power trend abnormal; viscosity trend deviating from expected"
+    },
+    {
+      "code": "FEED_PUMP_MALFUNCTION",
+      "description": "Feed pump delivers reduced flow during charging",
+      "affected_equipment": "Feed Pump",
+      "primary_variable": "Inlet Flow",
+      "deviation_type": "Step (decrease)",
+      "magnitude": "-40 % of flow setpoint",
+      "ramp_time_min": 2.0,
+      "active_phase": "CHARGING",
+      "secondary_variables": "Tank Level, Batch Mass, Pressure",
+      "detection_rule": "Inlet flow < 80 % of setpoint for 2 consecutive min",
+      "severity": "CRITICAL",
+      "evidence_statement": "Inlet flow below setpoint while valve position normal; tank level rising slower than expected"
+    },
+    {
+      "code": "CONTROL_VALVE_MALFUNCTION",
+      "description": "Valve position does not follow demanded opening",
+      "affected_equipment": "Control Valve",
+      "primary_variable": "Valve Position",
+      "deviation_type": "Step (stuck)",
+      "magnitude": "Stuck at 50 % open",
+      "ramp_time_min": 1.0,
+      "active_phase": "CHARGING",
+      "secondary_variables": "Inlet Flow, Tank Level",
+      "detection_rule": "|Demanded - actual valve position| > 10 % for 2 consecutive min",
+      "severity": "WARNING",
+      "evidence_statement": "Valve position not following demand; inlet flow inconsistent with valve opening"
+    },
+    {
+      "code": "TANK_LEAKAGE",
+      "description": "Unaccounted material loss from tank",
+      "affected_equipment": "Mixing Tank",
+      "primary_variable": "Tank Level",
+      "deviation_type": "Ramp (decrease)",
+      "magnitude": "-0.15 % level/min",
+      "ramp_time_min": 10.0,
+      "active_phase": "MIXING",
+      "secondary_variables": "Batch Mass, Pressure",
+      "detection_rule": "Mass balance residual > 1.5 % of batch mass",
+      "severity": "CRITICAL",
+      "evidence_statement": "Tank level falling with no outlet flow; mass balance does not close"
+    },
+    {
+      "code": "VISCOSITY_QUALITY_DEVIATION",
+      "description": "Viscosity moves outside target specification",
+      "affected_equipment": "Product Quality",
+      "primary_variable": "Viscosity",
+      "deviation_type": "Ramp (increase)",
+      "magnitude": "+12 % above target maximum",
+      "ramp_time_min": 20.0,
+      "active_phase": "MIXING",
+      "secondary_variables": "Temperature, Agitator Speed",
+      "detection_rule": "Viscosity outside target range for 5 consecutive min",
+      "severity": "WARNING",
+      "evidence_statement": "Viscosity outside specification range; temperature and agitator speed within limits"
+    }
+  ],
+  "scenarios": [
+    {
+      "scenario_id": "SC-01",
+      "fault_code": "TEMP_SENSOR_DRIFT",
+      "batch_id": "1AP/0191/26-27",
+      "injection_time_min": 96.0
+    },
+    {
+      "scenario_id": "SC-02",
+      "fault_code": "AGITATOR_MOTOR_MALFUNCTION",
+      "batch_id": "1AP/0187/26-27",
+      "injection_time_min": 75.0
+    },
+    {
+      "scenario_id": "SC-03",
+      "fault_code": "FEED_PUMP_MALFUNCTION",
+      "batch_id": "2AP/0646/26-27",
+      "injection_time_min": 12.0
+    },
+    {
+      "scenario_id": "SC-04",
+      "fault_code": "CONTROL_VALVE_MALFUNCTION",
+      "batch_id": "2AP/641/26-27",
+      "injection_time_min": 10.0
+    },
+    {
+      "scenario_id": "SC-05",
+      "fault_code": "TANK_LEAKAGE",
+      "batch_id": "4AP/0093/26-27",
+      "injection_time_min": 122.0
+    },
+    {
+      "scenario_id": "SC-06",
+      "fault_code": "VISCOSITY_QUALITY_DEVIATION",
+      "batch_id": "1AP/0183/26-27",
+      "injection_time_min": 131.0
+    }
+  ]
+}
