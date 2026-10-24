@@ -10,6 +10,14 @@ export function AcknowledgeAllAlarms(arg1) {
   return window['go']['main']['App']['AcknowledgeAllAlarms'](arg1);
 }
 
+export function AddInspectionRecord(arg1) {
+  return window['go']['main']['App']['AddInspectionRecord'](arg1);
+}
+
+export function AddStorageRetest(arg1) {
+  return window['go']['main']['App']['AddStorageRetest'](arg1);
+}
+
 export function ClearFault() {
   return window['go']['main']['App']['ClearFault']();
 }
@@ -30,6 +38,10 @@ export function GetAlarms() {
   return window['go']['main']['App']['GetAlarms']();
 }
 
+export function GetAssetHealth() {
+  return window['go']['main']['App']['GetAssetHealth']();
+}
+
 export function GetBatchDetails(arg1) {
   return window['go']['main']['App']['GetBatchDetails'](arg1);
 }
@@ -46,12 +58,24 @@ export function GetBatches() {
   return window['go']['main']['App']['GetBatches']();
 }
 
+export function GetColourQuality(arg1) {
+  return window['go']['main']['App']['GetColourQuality'](arg1);
+}
+
 export function GetDiagnosis() {
   return window['go']['main']['App']['GetDiagnosis']();
 }
 
 export function GetEmergencyStatus() {
   return window['go']['main']['App']['GetEmergencyStatus']();
+}
+
+export function GetEvaluationMode() {
+  return window['go']['main']['App']['GetEvaluationMode']();
+}
+
+export function GetFaultKnowledgeBase() {
+  return window['go']['main']['App']['GetFaultKnowledgeBase']();
 }
 
 export function GetIngestionSummary() {
@@ -62,12 +86,24 @@ export function GetLiveData() {
   return window['go']['main']['App']['GetLiveData']();
 }
 
+export function GetMaintenanceForecast() {
+  return window['go']['main']['App']['GetMaintenanceForecast']();
+}
+
 export function GetMatlabConsoleLogs() {
   return window['go']['main']['App']['GetMatlabConsoleLogs']();
 }
 
+export function GetParameterSources() {
+  return window['go']['main']['App']['GetParameterSources']();
+}
+
 export function GetPredefinedWhatIfScenarios() {
   return window['go']['main']['App']['GetPredefinedWhatIfScenarios']();
+}
+
+export function GetRecommendations() {
+  return window['go']['main']['App']['GetRecommendations']();
 }
 
 export function GetSimulationState() {
@@ -90,6 +126,30 @@ export function GetValidationBatches() {
   return window['go']['main']['App']['GetValidationBatches']();
 }
 
+export function GetValidationGroupMetrics() {
+  return window['go']['main']['App']['GetValidationGroupMetrics']();
+}
+
+export function GetWasteRisk() {
+  return window['go']['main']['App']['GetWasteRisk']();
+}
+
+export function ImportColourCSV(arg1) {
+  return window['go']['main']['App']['ImportColourCSV'](arg1);
+}
+
+export function ImportInspectionCSV(arg1) {
+  return window['go']['main']['App']['ImportInspectionCSV'](arg1);
+}
+
+export function ImportInventoryCSV(arg1) {
+  return window['go']['main']['App']['ImportInventoryCSV'](arg1);
+}
+
+export function ImportStorageCSV(arg1) {
+  return window['go']['main']['App']['ImportStorageCSV'](arg1);
+}
+
 export function IngestCSV(arg1, arg2) {
   return window['go']['main']['App']['IngestCSV'](arg1, arg2);
 }
@@ -100,6 +160,10 @@ export function IngestFromFile(arg1) {
 
 export function InjectFault(arg1) {
   return window['go']['main']['App']['InjectFault'](arg1);
+}
+
+export function ListInspectionRecords(arg1) {
+  return window['go']['main']['App']['ListInspectionRecords'](arg1);
 }
 
 export function LoadPreloadedDataset(arg1) {
@@ -126,12 +190,28 @@ export function ResumeReplay() {
   return window['go']['main']['App']['ResumeReplay']();
 }
 
+export function RunEvaluationExperiment(arg1) {
+  return window['go']['main']['App']['RunEvaluationExperiment'](arg1);
+}
+
 export function SetActiveBatch(arg1) {
   return window['go']['main']['App']['SetActiveBatch'](arg1);
 }
 
 export function SetAlarmConfig(arg1) {
   return window['go']['main']['App']['SetAlarmConfig'](arg1);
+}
+
+export function SetEvaluationMode(arg1) {
+  return window['go']['main']['App']['SetEvaluationMode'](arg1);
+}
+
+export function SetParameterSource(arg1) {
+  return window['go']['main']['App']['SetParameterSource'](arg1);
+}
+
+export function SetReferenceColour(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['SetReferenceColour'](arg1, arg2, arg3, arg4);
 }
 
 export function SetReplaySpeed(arg1) {
@@ -164,4 +244,8 @@ export function TriggerEmergencyTrip(arg1, arg2) {
 
 export function TriggerTestEmergency() {
   return window['go']['main']['App']['TriggerTestEmergency']();
+}
+
+export function UpsertFinishedBatch(arg1) {
+  return window['go']['main']['App']['UpsertFinishedBatch'](arg1);
 }

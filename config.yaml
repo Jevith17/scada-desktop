@@ -8,3 +8,5 @@ default_grade: PREMIUM ARCHITECTURAL EMULSION
 reconnect_interval_sec: 5
 sample_interval_ms: 1000
 logging_level: INFO
+validation_seed: 42
+evaluation_mode: full_cqw

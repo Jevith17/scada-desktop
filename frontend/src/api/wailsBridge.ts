@@ -13,6 +13,17 @@ import {
   BatchValidationResult,
   SimulinkModelArchitecture,
   MatlabConsoleLog,
+  AssetHealth,
+  MaintenanceForecast,
+  InspectionRecord,
+  ColourQuality,
+  StorageRetest,
+  FinishedBatch,
+  WasteRisk,
+  RecommendationItem,
+  ParameterSource,
+  FaultKnowledge,
+  ValidationGroupSummary,
 } from '../types/scada';
 
 // Declare Wails window interface
@@ -62,6 +73,27 @@ declare global {
           GenerateProcessModel: (batchID: string) => Promise<any>;
           SimulateWhatIf: (scenario: any) => Promise<{ success: boolean; result?: any; error?: string }>;
           GetPredefinedWhatIfScenarios: () => Promise<any[]>;
+          GetAssetHealth: () => Promise<AssetHealth[]>;
+          GetMaintenanceForecast: () => Promise<MaintenanceForecast>;
+          AddInspectionRecord: (rec: InspectionRecord) => Promise<{ success: boolean; error?: string }>;
+          ListInspectionRecords: (assetID: string) => Promise<InspectionRecord[]>;
+          SetReferenceColour: (grade: string, lab: number[], tol: number, approver: string) => Promise<{ success: boolean; error?: string }>;
+          GetColourQuality: (batchID: string) => Promise<ColourQuality>;
+          AddStorageRetest: (rec: StorageRetest) => Promise<{ success: boolean; error?: string }>;
+          UpsertFinishedBatch: (fb: FinishedBatch) => Promise<{ success: boolean; error?: string }>;
+          GetWasteRisk: () => Promise<WasteRisk>;
+          GetRecommendations: () => Promise<RecommendationItem[]>;
+          SetEvaluationMode: (mode: string) => Promise<string>;
+          GetEvaluationMode: () => Promise<string>;
+          GetParameterSources: () => Promise<ParameterSource[]>;
+          SetParameterSource: (p: ParameterSource) => Promise<{ success: boolean; error?: string }>;
+          GetFaultKnowledgeBase: () => Promise<Record<string, FaultKnowledge>>;
+          GetValidationGroupMetrics: () => Promise<Record<string, ValidationGroupSummary>>;
+          ImportInspectionCSV: (content: string) => Promise<{ success: boolean; result?: any; error?: string }>;
+          ImportColourCSV: (content: string) => Promise<{ success: boolean; result?: any; error?: string }>;
+          ImportStorageCSV: (content: string) => Promise<{ success: boolean; result?: any; error?: string }>;
+          ImportInventoryCSV: (content: string) => Promise<{ success: boolean; result?: any; error?: string }>;
+          RunEvaluationExperiment: (outputPath: string) => Promise<{ success: boolean; csv_path?: string; error?: string }>;
         };
       };
     };
@@ -459,6 +491,273 @@ export const wailsApi = {
       return await window.go.main.App.GetPredefinedWhatIfScenarios();
     }
     return [];
+  },
+
+  getAssetHealth: async (): Promise<AssetHealth[]> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.GetAssetHealth();
+    }
+    return [
+      {
+        asset_id: 'TK-101-WALL',
+        type: 'TANK_WALL',
+        state: 'HEALTHY',
+        status: 'SUPPORTED',
+        evidence: ['Ultrasonic thickness remaining: 5.72 mm > 3.00 mm min'],
+        source: 'go-reference',
+        last_updated: new Date().toISOString(),
+      },
+      {
+        asset_id: 'AGITATOR-01',
+        type: 'AGITATOR_MOTOR',
+        state: 'HEALTHY',
+        status: 'SUPPORTED',
+        evidence: ['Motor power 14.8 kW normal for 600 RPM'],
+        source: 'go-reference',
+        last_updated: new Date().toISOString(),
+      },
+      {
+        asset_id: 'FEED-PUMP-01',
+        type: 'FEED_PUMP',
+        state: 'HEALTHY',
+        status: 'SUPPORTED',
+        evidence: ['Flow rate nominal 25 kg/min'],
+        source: 'go-reference',
+        last_updated: new Date().toISOString(),
+      },
+      {
+        asset_id: 'CONTROL-VALVE-01',
+        type: 'CONTROL_VALVE',
+        state: 'NOT_ASSESSED',
+        status: 'INSUFFICIENT_DATA',
+        evidence: ['Position feedback telemetry not instrumented'],
+        missing_data: ['valve_stem_travel_pct', 'actuator_pressure_bar'],
+        source: 'go-reference',
+        last_updated: new Date().toISOString(),
+      },
+    ];
+  },
+
+  getMaintenanceForecast: async (): Promise<MaintenanceForecast> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.GetMaintenanceForecast();
+    }
+    return {
+      corrosion: {
+        asset_id: 'TK-101-WALL',
+        status: 'SUPPORTED',
+        last_inspection: '2026-03-01',
+        readings: [
+          { date: '2024-03-01', location: 'SHELL-L1', thickness_mm: 6.0 },
+          { date: '2025-03-01', location: 'SHELL-L1', thickness_mm: 5.86 },
+          { date: '2026-03-01', location: 'SHELL-L1', thickness_mm: 5.72 },
+        ],
+        corrosion_rate_mm_per_year: 0.14,
+        min_allowable_mm: 3.0,
+        remaining_life_years: { low: 18.2, expected: 19.4, high: 20.8 },
+        caveat: 'Wall-loss projection is an extrapolation based on UT measurements and does not replace inspection code requirements.',
+      },
+      rotating_equipment: [
+        { asset_id: 'AGITATOR-01', trend: 'STABLE', recommended_action: 'Routine periodic lubrication check' },
+        { asset_id: 'FEED-PUMP-01', trend: 'STABLE', recommended_action: 'Normal operation' },
+      ],
+      priority_ranking: [
+        { rank: 1, asset_id: 'TK-101-WALL', reason: 'Annual ultrasonic survey due in 11 months' },
+      ],
+      source: 'go-reference',
+    };
+  },
+
+  addInspectionRecord: async (rec: InspectionRecord): Promise<{ success: boolean; error?: string }> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.AddInspectionRecord(rec);
+    }
+    return { success: true };
+  },
+
+  listInspectionRecords: async (assetID: string): Promise<InspectionRecord[]> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.ListInspectionRecords(assetID);
+    }
+    return [];
+  },
+
+  setReferenceColour: async (grade: string, lab: number[], tol: number, approver: string): Promise<{ success: boolean; error?: string }> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.SetReferenceColour(grade, lab, tol, approver);
+    }
+    return { success: true };
+  },
+
+  getColourQuality: async (batchID: string): Promise<ColourQuality> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.GetColourQuality(batchID);
+    }
+    return {
+      batch_id: batchID || '1AP/0191/26-27',
+      grade: 'PREMIUM ARCHITECTURAL EMULSION',
+      colour: {
+        status: 'SUPPORTED',
+        reference_Lab: [92.4, -1.2, 3.8],
+        measured_Lab: [92.1, -1.0, 4.1],
+        delta_E00: 0.45,
+        tolerance_delta_E00: 1.0,
+        result: 'WITHIN_TOLERANCE',
+      },
+      viscosity: {
+        value_cP: 3420,
+        range_cP: [3000, 4000],
+        result: 'WITHIN_SPECIFICATION',
+      },
+      batch_to_batch: {
+        grade: 'PREMIUM ARCHITECTURAL EMULSION',
+        n_batches: 5,
+        delta_E00_mean: 0.52,
+        viscosity_sd_cP: 145,
+      },
+      early_warning: {
+        status: 'SUPPORTED',
+        message: 'Parameters stable across production run',
+      },
+      source: 'go-reference',
+    };
+  },
+
+  addStorageRetest: async (rec: StorageRetest): Promise<{ success: boolean; error?: string }> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.AddStorageRetest(rec);
+    }
+    return { success: true };
+  },
+
+  upsertFinishedBatch: async (fb: FinishedBatch): Promise<{ success: boolean; error?: string }> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.UpsertFinishedBatch(fb);
+    }
+    return { success: true };
+  },
+
+  getWasteRisk: async (): Promise<WasteRisk> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.GetWasteRisk();
+    }
+    return {
+      summary: { batches_at_risk: 1, quantity_at_risk_kg: 5000 },
+      batches: [
+        {
+          batch_id: '1AP/0191/26-27',
+          grade: 'PREMIUM ARCHITECTURAL EMULSION',
+          quantity_kg: 5000,
+          finished_at: '2026-03-10',
+          age_days: 12,
+          storage_temp_C: 22.4,
+          last_viscosity_cP: 3420,
+          spec_range_cP: [3000, 4000],
+          ageing_model: { status: 'FUTURE_CAPABILITY' },
+          risk_level: 'OK',
+          reason: 'Hold time within 45 days limit; viscosity on-spec',
+          recommended_action: 'Standard warehouse inventory release',
+        },
+      ],
+      source: 'go-reference',
+    };
+  },
+
+  getRecommendations: async (): Promise<RecommendationItem[]> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.GetRecommendations();
+    }
+    return [
+      {
+        rank: 1,
+        action: 'INSPECT_TANK_WALL',
+        priority: 'MEDIUM',
+        because: [
+          'Condition: Ultrasonic thickness 5.72 mm healthy; annual UT due soon',
+          'Process & Quality: Batch operating parameters nominal',
+          'Maintenance: Next UT survey planned in 11 months',
+          'Waste Risk: Low inventory degradation risk',
+        ],
+        source: 'paintwise_cqw',
+      },
+    ];
+  },
+
+  setEvaluationMode: async (mode: string): Promise<string> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.SetEvaluationMode(mode);
+    }
+    return 'Mode set to ' + mode;
+  },
+
+  getEvaluationMode: async (): Promise<string> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.GetEvaluationMode();
+    }
+    return 'full_cqw';
+  },
+
+  getParameterSources: async (): Promise<ParameterSource[]> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.GetParameterSources();
+    }
+    return [];
+  },
+
+  setParameterSource: async (p: ParameterSource): Promise<{ success: boolean; error?: string }> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.SetParameterSource(p);
+    }
+    return { success: true };
+  },
+
+  getFaultKnowledgeBase: async (): Promise<Record<string, FaultKnowledge>> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.GetFaultKnowledgeBase();
+    }
+    return {};
+  },
+
+  getValidationGroupMetrics: async (): Promise<Record<string, ValidationGroupSummary>> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.GetValidationGroupMetrics();
+    }
+    return {};
+  },
+
+  importInspectionCSV: async (content: string): Promise<{ success: boolean; result?: any; error?: string }> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.ImportInspectionCSV(content);
+    }
+    return { success: true };
+  },
+
+  importColourCSV: async (content: string): Promise<{ success: boolean; result?: any; error?: string }> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.ImportColourCSV(content);
+    }
+    return { success: true };
+  },
+
+  importStorageCSV: async (content: string): Promise<{ success: boolean; result?: any; error?: string }> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.ImportStorageCSV(content);
+    }
+    return { success: true };
+  },
+
+  importInventoryCSV: async (content: string): Promise<{ success: boolean; result?: any; error?: string }> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.ImportInventoryCSV(content);
+    }
+    return { success: true };
+  },
+
+  runEvaluationExperiment: async (outputPath: string): Promise<{ success: boolean; csv_path?: string; error?: string }> => {
+    if (isWails && window.go) {
+      return await window.go.main.App.RunEvaluationExperiment(outputPath);
+    }
+    return { success: true, csv_path: outputPath };
   },
 };
 

@@ -502,4 +502,277 @@ func (a *App) GetPredefinedWhatIfScenarios() []models.WhatIfScenario {
 	return a.stateMgr.GetPredefinedWhatIfScenarios()
 }
 
+// =========================================================================
+// PAINTTWIN-CQW BOUND METHODS (WAILS BINDINGS)
+// =========================================================================
+
+// GetAssetHealth returns health status across primary plant assets
+func (a *App) GetAssetHealth() []models.AssetHealth {
+	if a.stateMgr == nil {
+		return []models.AssetHealth{}
+	}
+	return a.stateMgr.GetAssetHealth()
+}
+
+// GetMaintenanceForecast returns corrosion regression and rotating equipment trend
+func (a *App) GetMaintenanceForecast() models.MaintenanceForecast {
+	if a.stateMgr == nil {
+		return models.MaintenanceForecast{}
+	}
+	return a.stateMgr.GetMaintenanceForecast()
+}
+
+// AddInspectionRecord records ultrasonic thickness reading
+func (a *App) AddInspectionRecord(rec models.InspectionRecord) map[string]interface{} {
+	res := make(map[string]interface{})
+	if a.stateMgr == nil {
+		res["success"] = false
+		res["error"] = "State manager not initialized"
+		return res
+	}
+	if err := a.stateMgr.AddInspectionRecord(rec); err != nil {
+		res["success"] = false
+		res["error"] = err.Error()
+		return res
+	}
+	res["success"] = true
+	return res
+}
+
+// ListInspectionRecords returns history of thickness measurements
+func (a *App) ListInspectionRecords(assetID string) []models.InspectionRecord {
+	if a.stateMgr == nil {
+		return []models.InspectionRecord{}
+	}
+	return a.stateMgr.ListInspectionRecords(assetID)
+}
+
+// SetReferenceColour registers approved master shade coordinates
+func (a *App) SetReferenceColour(grade string, lab []float64, tol float64, approver string) map[string]interface{} {
+	res := make(map[string]interface{})
+	if a.stateMgr == nil {
+		res["success"] = false
+		res["error"] = "State manager not initialized"
+		return res
+	}
+	if err := a.stateMgr.SetReferenceColour(grade, lab, tol, approver); err != nil {
+		res["success"] = false
+		res["error"] = err.Error()
+		return res
+	}
+	res["success"] = true
+	return res
+}
+
+// GetColourQuality computes CIEDE2000 Delta E00 and viscosity conformance
+func (a *App) GetColourQuality(batchID string) models.ColourQuality {
+	if a.stateMgr == nil {
+		return models.ColourQuality{}
+	}
+	return a.stateMgr.GetColourQuality(batchID)
+}
+
+// AddStorageRetest logs stability re-test point
+func (a *App) AddStorageRetest(rec models.StorageRetest) map[string]interface{} {
+	res := make(map[string]interface{})
+	if a.stateMgr == nil {
+		res["success"] = false
+		res["error"] = "State manager not initialized"
+		return res
+	}
+	if err := a.stateMgr.AddStorageRetest(rec); err != nil {
+		res["success"] = false
+		res["error"] = err.Error()
+		return res
+	}
+	res["success"] = true
+	return res
+}
+
+// UpsertFinishedBatch registers or updates finished batch inventory
+func (a *App) UpsertFinishedBatch(fb models.FinishedBatch) map[string]interface{} {
+	res := make(map[string]interface{})
+	if a.stateMgr == nil {
+		res["success"] = false
+		res["error"] = "State manager not initialized"
+		return res
+	}
+	if err := a.stateMgr.UpsertFinishedBatch(fb); err != nil {
+		res["success"] = false
+		res["error"] = err.Error()
+		return res
+	}
+	res["success"] = true
+	return res
+}
+
+// GetWasteRisk evaluates hold-time risk, quantity at risk, and ageing model
+func (a *App) GetWasteRisk() models.WasteRisk {
+	if a.stateMgr == nil {
+		return models.WasteRisk{}
+	}
+	return a.stateMgr.GetWasteRisk()
+}
+
+// GetRecommendations returns decision engine ranked recommendations
+func (a *App) GetRecommendations() []models.RecommendationItem {
+	if a.stateMgr == nil {
+		return []models.RecommendationItem{}
+	}
+	return a.stateMgr.GetRecommendations()
+}
+
+// SetEvaluationMode changes active experiment evaluation configuration
+func (a *App) SetEvaluationMode(mode string) string {
+	if a.stateMgr == nil {
+		return "State manager not initialized"
+	}
+	return a.stateMgr.SetEvaluationMode(mode)
+}
+
+// GetEvaluationMode returns active experiment configuration
+func (a *App) GetEvaluationMode() string {
+	if a.stateMgr == nil {
+		return "full_cqw"
+	}
+	return a.stateMgr.GetEvaluationMode()
+}
+
+// GetParameterSources returns limit and parameter traceability register
+func (a *App) GetParameterSources() []models.ParameterSource {
+	if a.stateMgr == nil {
+		return []models.ParameterSource{}
+	}
+	return a.stateMgr.GetParameterSources()
+}
+
+// SetParameterSource records parameter origin
+func (a *App) SetParameterSource(p models.ParameterSource) map[string]interface{} {
+	res := make(map[string]interface{})
+	if a.stateMgr == nil {
+		res["success"] = false
+		res["error"] = "State manager not initialized"
+		return res
+	}
+	if err := a.stateMgr.SetParameterSource(p); err != nil {
+		res["success"] = false
+		res["error"] = err.Error()
+		return res
+	}
+	res["success"] = true
+	return res
+}
+
+// GetFaultKnowledgeBase returns complete canonical fault signatures
+func (a *App) GetFaultKnowledgeBase() map[string]models.FaultKnowledge {
+	if a.stateMgr == nil {
+		return map[string]models.FaultKnowledge{}
+	}
+	return a.stateMgr.GetFaultKnowledgeBase()
+}
+
+// GetValidationGroupMetrics returns deterministic 70/30 calibration vs validation metrics
+func (a *App) GetValidationGroupMetrics() map[string]models.ValidationGroupSummary {
+	if a.stateMgr == nil {
+		return map[string]models.ValidationGroupSummary{}
+	}
+	return a.stateMgr.GetValidationGroupMetrics()
+}
+
+// ImportInspectionCSV parses and validates ultrasonic thickness records
+func (a *App) ImportInspectionCSV(content string) map[string]interface{} {
+	res := make(map[string]interface{})
+	if a.stateMgr == nil {
+		res["success"] = false
+		res["error"] = "State manager not initialized"
+		return res
+	}
+	result, err := a.stateMgr.ImportInspectionCSV(content)
+	if err != nil {
+		res["success"] = false
+		res["error"] = err.Error()
+		return res
+	}
+	res["success"] = true
+	res["result"] = result
+	return res
+}
+
+// ImportColourCSV parses and validates L*a*b* readings
+func (a *App) ImportColourCSV(content string) map[string]interface{} {
+	res := make(map[string]interface{})
+	if a.stateMgr == nil {
+		res["success"] = false
+		res["error"] = "State manager not initialized"
+		return res
+	}
+	result, err := a.stateMgr.ImportColourCSV(content)
+	if err != nil {
+		res["success"] = false
+		res["error"] = err.Error()
+		return res
+	}
+	res["success"] = true
+	res["result"] = result
+	return res
+}
+
+// ImportStorageCSV parses and validates stability re-test records
+func (a *App) ImportStorageCSV(content string) map[string]interface{} {
+	res := make(map[string]interface{})
+	if a.stateMgr == nil {
+		res["success"] = false
+		res["error"] = "State manager not initialized"
+		return res
+	}
+	result, err := a.stateMgr.ImportStorageCSV(content)
+	if err != nil {
+		res["success"] = false
+		res["error"] = err.Error()
+		return res
+	}
+	res["success"] = true
+	res["result"] = result
+	return res
+}
+
+// ImportInventoryCSV parses and validates warehouse batch records
+func (a *App) ImportInventoryCSV(content string) map[string]interface{} {
+	res := make(map[string]interface{})
+	if a.stateMgr == nil {
+		res["success"] = false
+		res["error"] = "State manager not initialized"
+		return res
+	}
+	result, err := a.stateMgr.ImportInventoryCSV(content)
+	if err != nil {
+		res["success"] = false
+		res["error"] = err.Error()
+		return res
+	}
+	res["success"] = true
+	res["result"] = result
+	return res
+}
+
+// RunEvaluationExperiment runs the 4 configurations over the 6 fault scenarios and logs to CSV
+func (a *App) RunEvaluationExperiment(outputPath string) map[string]interface{} {
+	res := make(map[string]interface{})
+	if a.stateMgr == nil {
+		res["success"] = false
+		res["error"] = "State manager not initialized"
+		return res
+	}
+	csvPath, err := a.stateMgr.RunEvaluationExperiment(outputPath)
+	if err != nil {
+		res["success"] = false
+		res["error"] = err.Error()
+		return res
+	}
+	res["success"] = true
+	res["csv_path"] = csvPath
+	return res
+}
+
+
 

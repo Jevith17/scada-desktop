@@ -29,6 +29,8 @@ import {
   Bell,
   User,
   LogOut,
+  ShieldCheck,
+  Palette,
 } from 'lucide-react';
 
 export const RibbonToolbar: React.FC = () => {
@@ -264,6 +266,30 @@ export const RibbonToolbar: React.FC = () => {
           >
             <Activity className="w-3 h-3 text-[#4CAF72]" />
             <span className="text-[10px] font-bold">VALIDATION</span>
+          </button>
+          <button
+            onClick={() => openTab('asset_health')}
+            className={`px-2 py-0.5 rounded-sm border flex items-center gap-1 transition-colors ${
+              activeTabId === 'asset_health'
+                ? 'bg-[#24426b] text-white border-[#4C8DFF]'
+                : 'bg-[#202020] text-[#C5C5C5] border-[#383838] hover:bg-[#323232]'
+            }`}
+            title="Asset Health & Corrosion Prognostics"
+          >
+            <ShieldCheck className="w-3 h-3 text-[#39B8D3]" />
+            <span className="text-[10px] font-bold">ASSET HEALTH</span>
+          </button>
+          <button
+            onClick={() => openTab('quality_waste')}
+            className={`px-2 py-0.5 rounded-sm border flex items-center gap-1 transition-colors ${
+              activeTabId === 'quality_waste'
+                ? 'bg-[#24426b] text-white border-[#4C8DFF]'
+                : 'bg-[#202020] text-[#C5C5C5] border-[#383838] hover:bg-[#323232]'
+            }`}
+            title="CIEDE2000 Colour & Waste Risk"
+          >
+            <Palette className="w-3 h-3 text-[#E5A83B]" />
+            <span className="text-[10px] font-bold">QUALITY & WASTE</span>
           </button>
           <button
             onClick={() => openTab('logs')}

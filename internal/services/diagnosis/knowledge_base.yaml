@@ -1,0 +1,102 @@
+faults:
+  TEMP_SENSOR_DRIFT:
+    code: TEMP_SENSOR_DRIFT
+    title: Temperature Sensor Drift
+    category: Instrumentation
+    equipment: TEMP_TRANSMITTER_TT01
+    setpoint: 30.0
+    unit: "°C"
+    confidence: PROBABLE
+    detection_threshold: 1.5
+    evidence:
+      - "Measured temperature exceeds dynamic thermal balance prediction by > 1.8 °C"
+      - "Thermal energy accumulation rate dQ/dt inconsistent with cooling jacket flow"
+      - "Thermocouple resistance characteristic curve shows progressive positive bias"
+    description: "Pt100 RTD sensor element calibration drift or signal transmitter scaling failure in tank T01."
+    recommended_action: "VERIFY_TEMPERATURE_SENSOR"
+    impact: "Uncontrolled cooling jacket cycling, potential quality defect due to batch overheating."
+
+  AGITATOR_MOTOR_MALFUNCTION:
+    code: AGITATOR_MOTOR_MALFUNCTION
+    title: Agitator Drive Malfunction
+    category: Drives & Rotating Equipment
+    equipment: AGITATOR_DRIVE_M01
+    setpoint: 850.0
+    unit: "RPM"
+    confidence: CONFIRMED
+    detection_threshold: 40.0
+    evidence:
+      - "Agitator speed dropped > 12% below controller setpoint (850 RPM)"
+      - "Motor power consumption increased disproportionately under constant slurry viscosity"
+      - "VFD inverter torque limit reached with elevated shaft vibration"
+    description: "Dispersion shaft mechanical binding, impeller fouling, or VFD drive speed degradation."
+    recommended_action: "INSPECT_AGITATOR"
+    impact: "Inadequate shear rate, pigment agglomeration, pigment dispersion failure."
+
+  FEED_PUMP_MALFUNCTION:
+    code: FEED_PUMP_MALFUNCTION
+    title: Feed Pump Flow Collapse
+    category: Hydraulics
+    equipment: FEED_PUMP_P01
+    setpoint: 18.2
+    unit: "kg/min"
+    confidence: CONFIRMED
+    detection_threshold: 3.0
+    evidence:
+      - "Discharge mass flow fell below minimum charging threshold (< 5.0 kg/min)"
+      - "Pump discharge head pressure collapsed despite active run signal"
+      - "Inlet hydraulic cavitation detected by pressure transmitter PT01"
+    description: "Centrifugal feed pump P01 impeller cavitation, air lock, or suction line blockage."
+    recommended_action: "INVESTIGATE_FEED_PUMP"
+    impact: "Batch charging delay, starved reactor feed, incorrect formulation stoichiometry."
+
+  CONTROL_VALVE_MALFUNCTION:
+    code: CONTROL_VALVE_MALFUNCTION
+    title: Control Valve Position Error
+    category: Actuators
+    equipment: CONTROL_VALVE_CV01
+    setpoint: 72.0
+    unit: "%"
+    confidence: PROBABLE
+    detection_threshold: 8.0
+    evidence:
+      - "Actual valve stem position deviates from 4-20mA positioner demand by > 15%"
+      - "Actuator pneumatic supply pressure normal but valve travel is stalled"
+      - "Flow Cv characteristic shows stick-slip hysteresis pattern"
+    description: "Pneumatic control valve CV01 actuator stem sticking, packing galling, or positioner feedback linkage fault."
+    recommended_action: "INSPECT_VALVE"
+    impact: "Inaccurate dosing rate, level fluctuation in mixing vessel."
+
+  TANK_LEAKAGE:
+    code: TANK_LEAKAGE
+    title: Tank Vessel Leakage
+    category: Vessel Integrity
+    equipment: MIXING_TANK_TK101
+    setpoint: 68.4
+    unit: "%"
+    confidence: PROBABLE
+    detection_threshold: 0.5
+    evidence:
+      - "Tank level decreasing at -0.78%/min while discharge valve XV-102 is closed"
+      - "Dynamic mass balance equation indicates unaccounted material loss rate"
+      - "Hydrostatic head pressure at tank base decreasing without fluid discharge"
+    description: "Vessel envelope or bottom drain flange seal breach in mixing tank TK-101."
+    recommended_action: "INSPECT_TANK_WALL"
+    impact: "Product loss, environmental containment hazard, flammable solvent vapor release."
+
+  VISCOSITY_QUALITY_DEVIATION:
+    code: VISCOSITY_QUALITY_DEVIATION
+    title: Viscosity Quality Deviation
+    category: Product Quality & Rheology
+    equipment: MIXING_TANK_TK101
+    setpoint: 2870.0
+    unit: "cP"
+    confidence: CONFIRMED
+    detection_threshold: 150.0
+    evidence:
+      - "Online rheology estimate deviates > 250 cP from nominal batch trajectory"
+      - "Specific energy dissipation per kilogram indicates excessive binder polymer viscosity"
+      - "End-of-phase viscosity exceeds upper specification tolerance limit"
+    description: "Off-specification raw binder viscosity or thickener dosing calculation error."
+    recommended_action: "SAMPLE_AND_RETEST"
+    impact: "Finished paint batch fails quality control viscosity criteria, requiring solvent re-addition or downgrade."

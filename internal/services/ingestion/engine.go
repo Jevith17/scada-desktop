@@ -11,7 +11,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
+	"paintwise/internal/database"
 	"paintwise/internal/models"
 )
 
@@ -603,4 +605,395 @@ func (e *Engine) GetFaultLibrary() map[string]interface{} {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 	return e.faultData
+}
+
+// IngestInspectionCSV parses and validates ultrasonic thickness inspection records
+func (e *Engine) IngestInspectionCSV(content string, db *database.DB) (*models.IngestionResult, error) {
+	r := csv.NewReader(strings.NewReader(content))
+	records, err := r.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse CSV: %w", err)
+	}
+	if len(records) < 2 {
+		return nil, fmt.Errorf("CSV is empty or missing data rows")
+	}
+
+	header := records[0]
+	colIdx := make(map[string]int)
+	for i, h := range header {
+		colIdx[strings.ToLower(strings.TrimSpace(h))] = i
+	}
+
+	for _, req := range []string{"asset_id", "location_id", "inspected_at", "thickness_mm"} {
+		if _, ok := colIdx[req]; !ok {
+			return nil, fmt.Errorf("missing required column: %s", req)
+		}
+	}
+
+	type locDate struct {
+		location string
+		date     time.Time
+	}
+	lastDates := make(map[string]time.Time)
+	var validRows, invalidRows int
+	var issues []string
+
+	for rowIdx, row := range records[1:] {
+		if len(row) < len(header) {
+			invalidRows++
+			continue
+		}
+		assetID := strings.TrimSpace(row[colIdx["asset_id"]])
+		locID := strings.TrimSpace(row[colIdx["location_id"]])
+		dateStr := strings.TrimSpace(row[colIdx["inspected_at"]])
+		thkStr := strings.TrimSpace(row[colIdx["thickness_mm"]])
+
+		thk, err := strconv.ParseFloat(thkStr, 64)
+		if err != nil || thk <= 0 || thk > 100 {
+			invalidRows++
+			issues = append(issues, fmt.Sprintf("Row %d: thickness '%s' must be positive numeric <= 100mm", rowIdx+2, thkStr))
+			continue
+		}
+
+		t, err := time.Parse(time.RFC3339, dateStr)
+		if err != nil {
+			t, err = time.Parse("2006-01-02", dateStr)
+		}
+		if err != nil {
+			invalidRows++
+			issues = append(issues, fmt.Sprintf("Row %d: invalid date format '%s'", rowIdx+2, dateStr))
+			continue
+		}
+
+		// Chronological check per location
+		if prev, ok := lastDates[locID]; ok && t.Before(prev) {
+			invalidRows++
+			issues = append(issues, fmt.Sprintf("Row %d: date %s is not chronological for location %s (prior: %s)", rowIdx+2, dateStr, locID, prev.Format("2006-01-02")))
+			continue
+		}
+		lastDates[locID] = t
+
+		method := "Ultrasonic Pulse-Echo"
+		if idx, ok := colIdx["method"]; ok && idx < len(row) && row[idx] != "" {
+			method = strings.TrimSpace(row[idx])
+		}
+		unc := 0.05
+		if idx, ok := colIdx["uncertainty_mm"]; ok && idx < len(row) && row[idx] != "" {
+			if u, err := strconv.ParseFloat(strings.TrimSpace(row[idx]), 64); err == nil && u >= 0 {
+				unc = u
+			}
+		}
+		inspector := "Quality Inspector"
+		if idx, ok := colIdx["inspector"]; ok && idx < len(row) && row[idx] != "" {
+			inspector = strings.TrimSpace(row[idx])
+		}
+		notes := ""
+		if idx, ok := colIdx["notes"]; ok && idx < len(row) {
+			notes = strings.TrimSpace(row[idx])
+		}
+
+		rec := models.InspectionRecord{
+			ID:            fmt.Sprintf("INSP-%s-%s-%d", assetID, locID, t.Unix()),
+			AssetID:       assetID,
+			LocationID:    locID,
+			InspectedAt:   t.Format(time.RFC3339),
+			Method:        method,
+			ThicknessMM:   thk,
+			UncertaintyMM: unc,
+			Inspector:     inspector,
+			Notes:         notes,
+		}
+
+		if db != nil {
+			_ = db.AddInspectionRecord(rec)
+		}
+		validRows++
+	}
+
+	return &models.IngestionResult{
+		Success:       validRows > 0,
+		FileName:      "Inspection Records CSV",
+		DatasetSource: "Plant Wall Thickness Register",
+		Message:       fmt.Sprintf("Ingested %d valid thickness inspection records (%d invalid/rejected)", validRows, invalidRows),
+		Quality: models.DataQualityReport{
+			TotalRows:        len(records) - 1,
+			ValidRows:        validRows,
+			InvalidRows:      invalidRows,
+			CompletenessPct:  float64(validRows) / float64(len(records)-1) * 100,
+			Issues:           issues,
+			ValidationStatus: "VALID",
+		},
+	}, nil
+}
+
+// IngestColourCSV parses and validates L*a*b* spectrophotometer batch readings
+func (e *Engine) IngestColourCSV(content string, db *database.DB) (*models.IngestionResult, error) {
+	r := csv.NewReader(strings.NewReader(content))
+	records, err := r.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse CSV: %w", err)
+	}
+	if len(records) < 2 {
+		return nil, fmt.Errorf("CSV is empty or missing data rows")
+	}
+
+	header := records[0]
+	colIdx := make(map[string]int)
+	for i, h := range header {
+		colIdx[strings.ToLower(strings.TrimSpace(h))] = i
+	}
+
+	for _, req := range []string{"batch_id", "l", "a", "b"} {
+		if _, ok := colIdx[req]; !ok {
+			return nil, fmt.Errorf("missing required column: %s", req)
+		}
+	}
+
+	var validRows, invalidRows int
+	var issues []string
+
+	for rowIdx, row := range records[1:] {
+		if len(row) < len(header) {
+			invalidRows++
+			continue
+		}
+		bID := strings.TrimSpace(row[colIdx["batch_id"]])
+		lStr := strings.TrimSpace(row[colIdx["l"]])
+		aStr := strings.TrimSpace(row[colIdx["a"]])
+		bStr := strings.TrimSpace(row[colIdx["b"]])
+
+		lVal, errL := strconv.ParseFloat(lStr, 64)
+		aVal, errA := strconv.ParseFloat(aStr, 64)
+		bVal, errB := strconv.ParseFloat(bStr, 64)
+
+		if errL != nil || lVal < 0 || lVal > 100 {
+			invalidRows++
+			issues = append(issues, fmt.Sprintf("Row %d: L* '%s' out of range [0, 100]", rowIdx+2, lStr))
+			continue
+		}
+		if errA != nil || aVal < -128 || aVal > 127 {
+			invalidRows++
+			issues = append(issues, fmt.Sprintf("Row %d: a* '%s' out of range [-128, 127]", rowIdx+2, aStr))
+			continue
+		}
+		if errB != nil || bVal < -128 || bVal > 127 {
+			invalidRows++
+			issues = append(issues, fmt.Sprintf("Row %d: b* '%s' out of range [-128, 127]", rowIdx+2, bStr))
+			continue
+		}
+
+		inst := "Konica Minolta CM-2600d"
+		if idx, ok := colIdx["instrument"]; ok && idx < len(row) && row[idx] != "" {
+			inst = strings.TrimSpace(row[idx])
+		}
+		mDate := time.Now().UTC().Format(time.RFC3339)
+		if idx, ok := colIdx["measured_at"]; ok && idx < len(row) && row[idx] != "" {
+			mDate = strings.TrimSpace(row[idx])
+		}
+
+		m := models.ColourMeasurement{
+			ID:         fmt.Sprintf("COL-%s-%d", bID, time.Now().UnixNano()),
+			BatchID:    bID,
+			L:          lVal,
+			A:          aVal,
+			B:          bVal,
+			Instrument: inst,
+			MeasuredAt: mDate,
+		}
+
+		if db != nil {
+			_ = db.AddColourMeasurement(m)
+		}
+		validRows++
+	}
+
+	return &models.IngestionResult{
+		Success:       validRows > 0,
+		FileName:      "Colour Spectrophotometer CSV",
+		DatasetSource: "QC Laboratory Colour Records",
+		Message:       fmt.Sprintf("Ingested %d valid batch colour measurements (%d invalid/rejected)", validRows, invalidRows),
+		Quality: models.DataQualityReport{
+			TotalRows:        len(records) - 1,
+			ValidRows:        validRows,
+			InvalidRows:      invalidRows,
+			CompletenessPct:  float64(validRows) / float64(len(records)-1) * 100,
+			Issues:           issues,
+			ValidationStatus: "VALID",
+		},
+	}, nil
+}
+
+// IngestStorageCSV parses and validates storage re-test records
+func (e *Engine) IngestStorageCSV(content string, db *database.DB) (*models.IngestionResult, error) {
+	r := csv.NewReader(strings.NewReader(content))
+	records, err := r.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse CSV: %w", err)
+	}
+	if len(records) < 2 {
+		return nil, fmt.Errorf("CSV is empty or missing data rows")
+	}
+
+	header := records[0]
+	colIdx := make(map[string]int)
+	for i, h := range header {
+		colIdx[strings.ToLower(strings.TrimSpace(h))] = i
+	}
+
+	for _, req := range []string{"batch_id", "tested_at", "viscosity_cp"} {
+		if _, ok := colIdx[req]; !ok {
+			return nil, fmt.Errorf("missing required column: %s", req)
+		}
+	}
+
+	var validRows, invalidRows int
+	var issues []string
+
+	for rowIdx, row := range records[1:] {
+		if len(row) < len(header) {
+			invalidRows++
+			continue
+		}
+		bID := strings.TrimSpace(row[colIdx["batch_id"]])
+		dateStr := strings.TrimSpace(row[colIdx["tested_at"]])
+		viscStr := strings.TrimSpace(row[colIdx["viscosity_cp"]])
+
+		visc, errV := strconv.ParseFloat(viscStr, 64)
+		if errV != nil || visc <= 0 || visc > 20000 {
+			invalidRows++
+			issues = append(issues, fmt.Sprintf("Row %d: viscosity '%s' must be positive numeric <= 20000 cP", rowIdx+2, viscStr))
+			continue
+		}
+
+		phVal := 8.5
+		if idx, ok := colIdx["ph"]; ok && idx < len(row) && row[idx] != "" {
+			if p, errP := strconv.ParseFloat(strings.TrimSpace(row[idx]), 64); errP == nil && p >= 0 && p <= 14 {
+				phVal = p
+			}
+		}
+
+		other := ""
+		if idx, ok := colIdx["other_json"]; ok && idx < len(row) {
+			other = strings.TrimSpace(row[idx])
+		}
+
+		sr := models.StorageRetest{
+			ID:          fmt.Sprintf("RET-%s-%d", bID, time.Now().UnixNano()),
+			BatchID:     bID,
+			TestedAt:    dateStr,
+			ViscosityCP: visc,
+			PH:          phVal,
+			OtherJSON:   other,
+		}
+
+		if db != nil {
+			_ = db.AddStorageRetest(sr)
+		}
+		validRows++
+	}
+
+	return &models.IngestionResult{
+		Success:       validRows > 0,
+		FileName:      "Storage Re-test Records CSV",
+		DatasetSource: "Warehouse QA Stability Program",
+		Message:       fmt.Sprintf("Ingested %d valid storage re-test records (%d invalid/rejected)", validRows, invalidRows),
+		Quality: models.DataQualityReport{
+			TotalRows:        len(records) - 1,
+			ValidRows:        validRows,
+			InvalidRows:      invalidRows,
+			CompletenessPct:  float64(validRows) / float64(len(records)-1) * 100,
+			Issues:           issues,
+			ValidationStatus: "VALID",
+		},
+	}, nil
+}
+
+// IngestInventoryCSV parses and validates warehouse finished batch records
+func (e *Engine) IngestInventoryCSV(content string, db *database.DB) (*models.IngestionResult, error) {
+	r := csv.NewReader(strings.NewReader(content))
+	records, err := r.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse CSV: %w", err)
+	}
+	if len(records) < 2 {
+		return nil, fmt.Errorf("CSV is empty or missing data rows")
+	}
+
+	header := records[0]
+	colIdx := make(map[string]int)
+	for i, h := range header {
+		colIdx[strings.ToLower(strings.TrimSpace(h))] = i
+	}
+
+	for _, req := range []string{"batch_id", "grade", "finished_at", "quantity_kg"} {
+		if _, ok := colIdx[req]; !ok {
+			return nil, fmt.Errorf("missing required column: %s", req)
+		}
+	}
+
+	var validRows, invalidRows int
+	var issues []string
+
+	for rowIdx, row := range records[1:] {
+		if len(row) < len(header) {
+			invalidRows++
+			continue
+		}
+		bID := strings.TrimSpace(row[colIdx["batch_id"]])
+		grade := strings.TrimSpace(row[colIdx["grade"]])
+		finAt := strings.TrimSpace(row[colIdx["finished_at"]])
+		qtyStr := strings.TrimSpace(row[colIdx["quantity_kg"]])
+
+		qty, errQ := strconv.ParseFloat(qtyStr, 64)
+		if errQ != nil || qty <= 0 {
+			invalidRows++
+			issues = append(issues, fmt.Sprintf("Row %d: quantity '%s' must be positive numeric kg", rowIdx+2, qtyStr))
+			continue
+		}
+
+		loc := "WAREHOUSE_BAY_A1"
+		if idx, ok := colIdx["storage_location"]; ok && idx < len(row) && row[idx] != "" {
+			loc = strings.TrimSpace(row[idx])
+		}
+		temp := 25.0
+		if idx, ok := colIdx["storage_temp_c"]; ok && idx < len(row) && row[idx] != "" {
+			if t, errT := strconv.ParseFloat(strings.TrimSpace(row[idx]), 64); errT == nil {
+				temp = t
+			}
+		}
+		status := "RELEASED"
+		if idx, ok := colIdx["status"]; ok && idx < len(row) && row[idx] != "" {
+			status = strings.TrimSpace(row[idx])
+		}
+
+		fb := models.FinishedBatch{
+			BatchID:         bID,
+			Grade:           grade,
+			FinishedAt:      finAt,
+			QuantityKg:      qty,
+			StorageLocation: loc,
+			StorageTempC:    temp,
+			Status:          status,
+		}
+
+		if db != nil {
+			_ = db.UpsertFinishedBatch(fb)
+		}
+		validRows++
+	}
+
+	return &models.IngestionResult{
+		Success:       validRows > 0,
+		FileName:      "Finished Inventory Batches CSV",
+		DatasetSource: "Warehouse Inventory Management System",
+		Message:       fmt.Sprintf("Ingested %d valid finished warehouse batches (%d invalid/rejected)", validRows, invalidRows),
+		Quality: models.DataQualityReport{
+			TotalRows:        len(records) - 1,
+			ValidRows:        validRows,
+			InvalidRows:      invalidRows,
+			CompletenessPct:  float64(validRows) / float64(len(records)-1) * 100,
+			Issues:           issues,
+			ValidationStatus: "VALID",
+		},
+	}, nil
 }

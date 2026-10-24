@@ -251,9 +251,17 @@ func (e *Engine) processBatchValidation(raw rawBatchData) *models.BatchValidatio
 		calcMetric("Viscosity", "cP", measV, predV, 50.0),
 	}
 
-	// Calibration vs Validation split
+	// Deterministic 70/30 batch split (7 Calibration, 3 Validation)
 	batchType := "CALIBRATION"
-	if raw.BatchID == "B005" || raw.BatchID == "B006" || raw.BatchID == "B007" || raw.BatchID == "B008" {
+	validationBatches := map[string]bool{
+		"2AP/415/26-27":  true,
+		"2AP/591/26-27":  true,
+		"4AP/0093/26-27": true,
+		"B008":           true,
+		"B009":           true,
+		"B010":           true,
+	}
+	if validationBatches[raw.BatchID] {
 		batchType = "VALIDATION"
 	}
 
@@ -405,18 +413,18 @@ func (e *Engine) generateConsoleLogs() {
 		level  string
 		msg    string
 	}{
-		{-12 * time.Minute, "INFO", "Initializing MATLAB Engine session (R2024b)..."},
-		{-11 * time.Minute, "INFO", "Loading Simulink model: 'Paint_Mixing_DigitalTwin.slx'"},
-		{-11 * time.Minute, "INFO", "Configuring solver: ode45 (Dormand-Prince), RelativeTol=1e-3, AbsoluteTol=1e-6"},
-		{-10 * time.Minute, "INFO", "Loaded parameter dictionary 'twin_parameters.m' (42 variables, 12 subsystems)"},
-		{-9 * time.Minute, "INFO", "Compiling S-Functions and MATLAB Function blocks... Clean compilation (0 warnings)"},
-		{-8 * time.Minute, "INFO", "Calibration dataset loaded: Batches B001-B004 (1,025 telemetry samples)"},
-		{-7 * time.Minute, "INFO", "Simulink batch simulation executed: StopTime=1000.0s, elapsed execution time=1.42s"},
-		{-6 * time.Minute, "INFO", "Model validation executed against holdout dataset: Batches B005-B008 (1,024 samples)"},
-		{-5 * time.Minute, "INFO", "Computed overall model fit: R² = 0.9821, Mean Level RMSE = 0.42%, Mean Temp RMSE = 0.31°C"},
-		{-4 * time.Minute, "WARN", "Batch B006 QC alert: Final viscosity 1515 cP exceeds spec upper limit (1500 cP)"},
-		{-3 * time.Minute, "INFO", "Parity residuals evaluated against ±3σ bounds: 99.4% samples within normal variance"},
-		{-1 * time.Minute, "INFO", "Digital twin online and synchronized with PaintWise Virtual SCADA workstation"},
+		{-12 * time.Minute, "INFO", "[SIMULATED LOG] Initializing MATLAB Engine session (R2024b)..."},
+		{-11 * time.Minute, "INFO", "[SIMULATED LOG] Loading Simulink model: 'Paint_Mixing_DigitalTwin.slx'"},
+		{-11 * time.Minute, "INFO", "[SIMULATED LOG] Configuring solver: ode45 (Dormand-Prince), RelativeTol=1e-3, AbsoluteTol=1e-6"},
+		{-10 * time.Minute, "INFO", "[SIMULATED LOG] Loaded parameter dictionary 'twin_parameters.m' (42 variables, 12 subsystems)"},
+		{-9 * time.Minute, "INFO", "[SIMULATED LOG] Compiling S-Functions and MATLAB Function blocks... Clean compilation (0 warnings)"},
+		{-8 * time.Minute, "INFO", "[SIMULATED LOG] Calibration partition loaded: 7 batches (1,745 telemetry samples)"},
+		{-7 * time.Minute, "INFO", "[SIMULATED LOG] Simulink batch simulation executed: StopTime=1000.0s, elapsed execution time=1.42s"},
+		{-6 * time.Minute, "INFO", "[SIMULATED LOG] Model validation executed against holdout partition: 3 batches (745 samples)"},
+		{-5 * time.Minute, "INFO", "[SIMULATED LOG] Calibration R² = 0.9842 | Validation R² = 0.9785 (deterministic 70/30 split)"},
+		{-4 * time.Minute, "WARN", "[SIMULATED LOG] Validation batch 4AP/0093/26-27 QC note: shear-thinning rheology within spec"},
+		{-3 * time.Minute, "INFO", "[SIMULATED LOG] Parity residuals evaluated against ±3σ bounds: 99.4% samples within normal variance"},
+		{-1 * time.Minute, "INFO", "[SIMULATED LOG] Digital twin online and synchronized with PaintWise Virtual SCADA workstation"},
 	}
 
 	for _, l := range logs {
@@ -426,6 +434,69 @@ func (e *Engine) generateConsoleLogs() {
 			Message:   l.msg,
 		})
 	}
+}
+
+// GetGroupValidationSummary returns deterministic 70/30 split metrics for calibration (7) and validation (3) groups
+func (e *Engine) GetGroupValidationSummary() map[string]models.ValidationGroupSummary {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+
+	calBatches := make([]string, 0)
+	valBatches := make([]string, 0)
+	var calR2Sum, valR2Sum, calRMSESum, valRMSESum float64
+	var calCount, valCount int
+
+	seen := make(map[string]bool)
+	for _, res := range e.batchResults {
+		if res == nil || seen[res.BatchID] {
+			continue
+		}
+		seen[res.BatchID] = true
+
+		var r2Mean, rmseMean float64
+		for _, m := range res.Metrics {
+			r2Mean += m.R2
+			rmseMean += m.RMSE
+		}
+		if len(res.Metrics) > 0 {
+			r2Mean /= float64(len(res.Metrics))
+			rmseMean /= float64(len(res.Metrics))
+		}
+
+		if res.BatchType == "CALIBRATION" {
+			calBatches = append(calBatches, res.BatchID)
+			calR2Sum += r2Mean
+			calRMSESum += rmseMean
+			calCount++
+		} else {
+			valBatches = append(valBatches, res.BatchID)
+			valR2Sum += r2Mean
+			valRMSESum += rmseMean
+			valCount++
+		}
+	}
+
+	summary := make(map[string]models.ValidationGroupSummary)
+	if calCount > 0 {
+		summary["CALIBRATION"] = models.ValidationGroupSummary{
+			Group:      "CALIBRATION",
+			BatchCount: calCount,
+			MeanR2:     math.Round((calR2Sum/float64(calCount))*10000) / 10000,
+			MeanRMSE:   math.Round((calRMSESum/float64(calCount))*1000) / 1000,
+			Batches:    calBatches,
+		}
+	}
+	if valCount > 0 {
+		summary["VALIDATION"] = models.ValidationGroupSummary{
+			Group:      "VALIDATION",
+			BatchCount: valCount,
+			MeanR2:     math.Round((valR2Sum/float64(valCount))*10000) / 10000,
+			MeanRMSE:   math.Round((valRMSESum/float64(valCount))*1000) / 1000,
+			Batches:    valBatches,
+		}
+	}
+
+	return summary
 }
 
 // GetValidationBatches returns list of summary items for all available batches

@@ -1,5 +1,21 @@
 export namespace models {
 	
+	export class AgeingModelStatus {
+	    status: string;
+	    failure_probability?: number;
+	    window_days?: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new AgeingModelStatus(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.status = source["status"];
+	        this.failure_probability = source["failure_probability"];
+	        this.window_days = source["window_days"];
+	    }
+	}
 	export class Alarm {
 	    id: string;
 	    timestamp: string;
@@ -76,6 +92,32 @@ export namespace models {
 	        this.is_test_mode = source["is_test_mode"];
 	    }
 	}
+	export class AssetHealth {
+	    asset_id: string;
+	    type: string;
+	    state: string;
+	    status: string;
+	    evidence: string[];
+	    missing_data?: string[];
+	    source: string;
+	    last_updated: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new AssetHealth(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.asset_id = source["asset_id"];
+	        this.type = source["type"];
+	        this.state = source["state"];
+	        this.status = source["status"];
+	        this.evidence = source["evidence"];
+	        this.missing_data = source["missing_data"];
+	        this.source = source["source"];
+	        this.last_updated = source["last_updated"];
+	    }
+	}
 	export class Batch {
 	    batch_id: string;
 	    product_name: string;
@@ -144,6 +186,172 @@ export namespace models {
 	        this.sample_count = source["sample_count"];
 	    }
 	}
+	export class BatchToBatchColour {
+	    grade: string;
+	    n_batches: number;
+	    delta_E00_mean: number;
+	    viscosity_sd_cP: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new BatchToBatchColour(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.grade = source["grade"];
+	        this.n_batches = source["n_batches"];
+	        this.delta_E00_mean = source["delta_E00_mean"];
+	        this.viscosity_sd_cP = source["viscosity_sd_cP"];
+	    }
+	}
+	export class BatchWasteRisk {
+	    batch_id: string;
+	    grade: string;
+	    quantity_kg: number;
+	    finished_at: string;
+	    age_days: number;
+	    storage_temp_C: number;
+	    last_viscosity_cP: number;
+	    spec_range_cP: number[];
+	    ageing_model: AgeingModelStatus;
+	    risk_level: string;
+	    reason: string;
+	    recommended_action: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new BatchWasteRisk(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.batch_id = source["batch_id"];
+	        this.grade = source["grade"];
+	        this.quantity_kg = source["quantity_kg"];
+	        this.finished_at = source["finished_at"];
+	        this.age_days = source["age_days"];
+	        this.storage_temp_C = source["storage_temp_C"];
+	        this.last_viscosity_cP = source["last_viscosity_cP"];
+	        this.spec_range_cP = source["spec_range_cP"];
+	        this.ageing_model = this.convertValues(source["ageing_model"], AgeingModelStatus);
+	        this.risk_level = source["risk_level"];
+	        this.reason = source["reason"];
+	        this.recommended_action = source["recommended_action"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class ColourInfo {
+	    status: string;
+	    reference_Lab: number[];
+	    measured_Lab: number[];
+	    delta_E00: number;
+	    tolerance_delta_E00: number;
+	    result: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ColourInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.status = source["status"];
+	        this.reference_Lab = source["reference_Lab"];
+	        this.measured_Lab = source["measured_Lab"];
+	        this.delta_E00 = source["delta_E00"];
+	        this.tolerance_delta_E00 = source["tolerance_delta_E00"];
+	        this.result = source["result"];
+	    }
+	}
+	export class EarlyWarning {
+	    status: string;
+	    message: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new EarlyWarning(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.status = source["status"];
+	        this.message = source["message"];
+	    }
+	}
+	export class ViscosityInfo {
+	    value_cP: number;
+	    range_cP: number[];
+	    result: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ViscosityInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.value_cP = source["value_cP"];
+	        this.range_cP = source["range_cP"];
+	        this.result = source["result"];
+	    }
+	}
+	export class ColourQuality {
+	    batch_id: string;
+	    grade: string;
+	    colour: ColourInfo;
+	    viscosity: ViscosityInfo;
+	    batch_to_batch: BatchToBatchColour;
+	    early_warning: EarlyWarning;
+	    missing_data?: string[];
+	    source: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ColourQuality(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.batch_id = source["batch_id"];
+	        this.grade = source["grade"];
+	        this.colour = this.convertValues(source["colour"], ColourInfo);
+	        this.viscosity = this.convertValues(source["viscosity"], ViscosityInfo);
+	        this.batch_to_batch = this.convertValues(source["batch_to_batch"], BatchToBatchColour);
+	        this.early_warning = this.convertValues(source["early_warning"], EarlyWarning);
+	        this.missing_data = source["missing_data"];
+	        this.source = source["source"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 	export class ColumnMapping {
 	    source_column: string;
 	    mapped_target: string;
@@ -168,6 +376,83 @@ export namespace models {
 	        this.sample_value = source["sample_value"];
 	    }
 	}
+	export class RemainingLifeRange {
+	    low: number;
+	    expected: number;
+	    high: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new RemainingLifeRange(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.low = source["low"];
+	        this.expected = source["expected"];
+	        this.high = source["high"];
+	    }
+	}
+	export class CorrosionReading {
+	    date: string;
+	    location: string;
+	    thickness_mm: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new CorrosionReading(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.date = source["date"];
+	        this.location = source["location"];
+	        this.thickness_mm = source["thickness_mm"];
+	    }
+	}
+	export class CorrosionForecast {
+	    asset_id: string;
+	    status: string;
+	    last_inspection: string;
+	    readings: CorrosionReading[];
+	    corrosion_rate_mm_per_year: number;
+	    min_allowable_mm: number;
+	    remaining_life_years: RemainingLifeRange;
+	    caveat: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new CorrosionForecast(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.asset_id = source["asset_id"];
+	        this.status = source["status"];
+	        this.last_inspection = source["last_inspection"];
+	        this.readings = this.convertValues(source["readings"], CorrosionReading);
+	        this.corrosion_rate_mm_per_year = source["corrosion_rate_mm_per_year"];
+	        this.min_allowable_mm = source["min_allowable_mm"];
+	        this.remaining_life_years = this.convertValues(source["remaining_life_years"], RemainingLifeRange);
+	        this.caveat = source["caveat"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	
 	export class DataQualityReport {
 	    total_rows: number;
 	    valid_rows: number;
@@ -216,6 +501,7 @@ export namespace models {
 	        this.description = source["description"];
 	    }
 	}
+	
 	export class EmergencyStatus {
 	    is_pending: boolean;
 	    is_shutdown: boolean;
@@ -272,6 +558,30 @@ export namespace models {
 	        this.drain_valve = source["drain_valve"];
 	    }
 	}
+	export class FinishedBatch {
+	    batch_id: string;
+	    grade: string;
+	    finished_at: string;
+	    quantity_kg: number;
+	    storage_location: string;
+	    storage_temp_C: number;
+	    status: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new FinishedBatch(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.batch_id = source["batch_id"];
+	        this.grade = source["grade"];
+	        this.finished_at = source["finished_at"];
+	        this.quantity_kg = source["quantity_kg"];
+	        this.storage_location = source["storage_location"];
+	        this.storage_temp_C = source["storage_temp_C"];
+	        this.status = source["status"];
+	    }
+	}
 	export class IngestionResult {
 	    success: boolean;
 	    file_name: string;
@@ -315,6 +625,34 @@ export namespace models {
 		    }
 		    return a;
 		}
+	}
+	export class InspectionRecord {
+	    id: string;
+	    asset_id: string;
+	    location_id: string;
+	    inspected_at: string;
+	    method: string;
+	    thickness_mm: number;
+	    uncertainty_mm: number;
+	    inspector: string;
+	    notes?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new InspectionRecord(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.asset_id = source["asset_id"];
+	        this.location_id = source["location_id"];
+	        this.inspected_at = source["inspected_at"];
+	        this.method = source["method"];
+	        this.thickness_mm = source["thickness_mm"];
+	        this.uncertainty_mm = source["uncertainty_mm"];
+	        this.inspector = source["inspector"];
+	        this.notes = source["notes"];
+	    }
 	}
 	export class QualityMetrics {
 	    target_viscosity_range_cP: number[];
@@ -420,6 +758,75 @@ export namespace models {
 		    return a;
 		}
 	}
+	export class MaintenancePriorityItem {
+	    rank: number;
+	    asset_id: string;
+	    reason: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new MaintenancePriorityItem(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.rank = source["rank"];
+	        this.asset_id = source["asset_id"];
+	        this.reason = source["reason"];
+	    }
+	}
+	export class RotatingEquipmentTrend {
+	    asset_id: string;
+	    trend: string;
+	    recommended_action: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new RotatingEquipmentTrend(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.asset_id = source["asset_id"];
+	        this.trend = source["trend"];
+	        this.recommended_action = source["recommended_action"];
+	    }
+	}
+	export class MaintenanceForecast {
+	    corrosion: CorrosionForecast;
+	    rotating_equipment: RotatingEquipmentTrend[];
+	    priority_ranking: MaintenancePriorityItem[];
+	    source: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new MaintenanceForecast(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.corrosion = this.convertValues(source["corrosion"], CorrosionForecast);
+	        this.rotating_equipment = this.convertValues(source["rotating_equipment"], RotatingEquipmentTrend);
+	        this.priority_ranking = this.convertValues(source["priority_ranking"], MaintenancePriorityItem);
+	        this.source = source["source"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	
 	export class MatlabConsoleLog {
 	    timestamp: string;
 	    level: string;
@@ -434,6 +841,30 @@ export namespace models {
 	        this.timestamp = source["timestamp"];
 	        this.level = source["level"];
 	        this.message = source["message"];
+	    }
+	}
+	export class ParameterSource {
+	    param_key: string;
+	    value: number;
+	    unit: string;
+	    source_type: string;
+	    source_ref: string;
+	    owner: string;
+	    updated_at: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ParameterSource(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.param_key = source["param_key"];
+	        this.value = source["value"];
+	        this.unit = source["unit"];
+	        this.source_type = source["source_type"];
+	        this.source_ref = source["source_ref"];
+	        this.owner = source["owner"];
+	        this.updated_at = source["updated_at"];
 	    }
 	}
 	export class ProcessModelEdge {
@@ -551,6 +982,30 @@ export namespace models {
 	
 	
 	
+	export class RecommendationItem {
+	    rank: number;
+	    action: string;
+	    priority: string;
+	    because: string[];
+	    linked_fault?: string;
+	    source: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new RecommendationItem(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.rank = source["rank"];
+	        this.action = source["action"];
+	        this.priority = source["priority"];
+	        this.because = source["because"];
+	        this.linked_fault = source["linked_fault"];
+	        this.source = source["source"];
+	    }
+	}
+	
+	
 	export class SimulinkBlock {
 	    id: string;
 	    name: string;
@@ -637,6 +1092,28 @@ export namespace models {
 		    return a;
 		}
 	}
+	export class StorageRetest {
+	    id: string;
+	    batch_id: string;
+	    tested_at: string;
+	    viscosity_cP: number;
+	    ph: number;
+	    other_json?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new StorageRetest(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.batch_id = source["batch_id"];
+	        this.tested_at = source["tested_at"];
+	        this.viscosity_cP = source["viscosity_cP"];
+	        this.ph = source["ph"];
+	        this.other_json = source["other_json"];
+	    }
+	}
 	export class SystemStatus {
 	    app_version: string;
 	    mode: string;
@@ -695,6 +1172,56 @@ export namespace models {
 	        this.motor_power_kW = source["motor_power_kW"];
 	    }
 	}
+	
+	export class WasteRiskSummary {
+	    batches_at_risk: number;
+	    quantity_at_risk_kg: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new WasteRiskSummary(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.batches_at_risk = source["batches_at_risk"];
+	        this.quantity_at_risk_kg = source["quantity_at_risk_kg"];
+	    }
+	}
+	export class WasteRisk {
+	    summary: WasteRiskSummary;
+	    batches: BatchWasteRisk[];
+	    source: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new WasteRisk(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.summary = this.convertValues(source["summary"], WasteRiskSummary);
+	        this.batches = this.convertValues(source["batches"], BatchWasteRisk);
+	        this.source = source["source"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	
 	export class WhatIfScenario {
 	    scenario_id: string;
 	    batch_id: string;

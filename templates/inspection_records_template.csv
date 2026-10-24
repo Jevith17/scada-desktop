@@ -1,0 +1,6 @@
+asset_id,location_id,inspected_at,method,thickness_mm,uncertainty_mm,inspector,notes
+TK-101-WALL,L1_LOWER_SHELL,2025-01-15T09:00:00Z,Ultrasonic Pulse-Echo,7.85,0.05,John Doe,Baseline measurement lower course
+TK-101-WALL,L2_MID_SHELL,2025-01-15T09:30:00Z,Ultrasonic Pulse-Echo,7.92,0.05,John Doe,Mid shell baseline
+TK-101-WALL,L3_DISH_BOTTOM,2025-01-15T10:00:00Z,Ultrasonic Pulse-Echo,7.70,0.05,John Doe,Vessel bottom head
+TK-101-WALL,L1_LOWER_SHELL,2025-07-20T11:00:00Z,Ultrasonic Pulse-Echo,7.62,0.05,Alice Smith,6-month interval re-inspection
+TK-101-WALL,L1_LOWER_SHELL,2026-02-10T14:00:00Z,Ultrasonic Pulse-Echo,7.38,0.05,Bob Taylor,12-month interval re-inspection

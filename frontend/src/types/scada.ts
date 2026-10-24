@@ -402,3 +402,259 @@ export interface WhatIfResult {
   thresholds: Record<string, number>;
 }
 
+// =========================================================================
+// PAINTTWIN-CQW EXTENSION DATA CONTRACT (v3.0)
+// =========================================================================
+
+export type EvidenceStatus =
+  | 'SUPPORTED'
+  | 'INSUFFICIENT_DATA'
+  | 'NOT_ASSESSED'
+  | 'FUTURE_CAPABILITY';
+
+export type AssetState =
+  | 'HEALTHY'
+  | 'DETERIORATING'
+  | 'INSPECTION_DUE'
+  | 'CRITICAL'
+  | 'NOT_ASSESSED';
+
+export interface FaultKnowledge {
+  code: FaultCode;
+  title: string;
+  category: string;
+  equipment: string;
+  setpoint: number;
+  unit: string;
+  confidence: FaultConfidence;
+  detection_threshold: number;
+  evidence: string[];
+  description: string;
+  recommended_action: string;
+  impact: string;
+}
+
+export interface ParameterSource {
+  param_key: string;
+  value: number;
+  unit: string;
+  source_type: string;
+  source_ref: string;
+  owner: string;
+  updated_at: string;
+}
+
+export interface GradeSpec {
+  grade: string;
+  viscosity_min: number;
+  viscosity_max: number;
+  ph_min: number;
+  ph_max: number;
+  delta_e00_tol: number;
+  hold_time_alert_days: number;
+  source_ref: string;
+}
+
+export interface InspectionRecord {
+  id?: string;
+  asset_id: string;
+  location_id: string;
+  inspected_at: string;
+  method: string;
+  thickness_mm: number;
+  uncertainty_mm: number;
+  inspector: string;
+  notes?: string;
+}
+
+export interface AssetDesign {
+  asset_id: string;
+  material: string;
+  design_thickness_mm: number;
+  min_allowable_mm: number;
+  min_allowable_source: string;
+}
+
+export interface ReferenceColour {
+  grade: string;
+  l: number;
+  a: number;
+  b: number;
+  illuminant: string;
+  observer: string;
+  approved_by: string;
+  approved_at: string;
+}
+
+export interface ColourMeasurement {
+  id?: string;
+  batch_id: string;
+  l: number;
+  a: number;
+  b: number;
+  instrument: string;
+  measured_at: string;
+}
+
+export interface FinishedBatch {
+  batch_id: string;
+  grade: string;
+  finished_at: string;
+  quantity_kg: number;
+  storage_location: string;
+  storage_temp_C: number;
+  status: string;
+}
+
+export interface StorageRetest {
+  id?: string;
+  batch_id: string;
+  tested_at: string;
+  viscosity_cP: number;
+  ph: number;
+  other_json?: string;
+}
+
+export interface AssetHealth {
+  asset_id: string;
+  type: string; // TANK_WALL, AGITATOR_MOTOR, FEED_PUMP, CONTROL_VALVE
+  state: AssetState;
+  status: EvidenceStatus;
+  evidence: string[];
+  missing_data?: string[];
+  source: string;
+  last_updated: string;
+}
+
+export interface CorrosionReading {
+  date: string;
+  location: string;
+  thickness_mm: number;
+}
+
+export interface RemainingLifeRange {
+  low: number;
+  expected: number;
+  high: number;
+}
+
+export interface CorrosionForecast {
+  asset_id: string;
+  status: EvidenceStatus;
+  last_inspection: string;
+  readings: CorrosionReading[];
+  corrosion_rate_mm_per_year: number;
+  min_allowable_mm: number;
+  remaining_life_years: RemainingLifeRange;
+  caveat: string;
+}
+
+export interface RotatingEquipmentTrend {
+  asset_id: string;
+  trend: string; // 'WORSENING' | 'STABLE' | 'IMPROVING' | 'NOT_ASSESSED'
+  recommended_action: string;
+}
+
+export interface MaintenancePriorityItem {
+  rank: number;
+  asset_id: string;
+  reason: string;
+}
+
+export interface MaintenanceForecast {
+  corrosion: CorrosionForecast;
+  rotating_equipment: RotatingEquipmentTrend[];
+  priority_ranking: MaintenancePriorityItem[];
+  source: string;
+}
+
+export interface ColourInfo {
+  status: EvidenceStatus;
+  reference_Lab: [number, number, number];
+  measured_Lab: [number, number, number];
+  delta_E00: number;
+  tolerance_delta_E00: number;
+  result: 'WITHIN_TOLERANCE' | 'OUT_OF_TOLERANCE' | 'NOT_ASSESSED';
+}
+
+export interface ViscosityInfo {
+  value_cP: number;
+  range_cP: [number, number];
+  result: 'WITHIN_SPECIFICATION' | 'OUT_OF_SPECIFICATION';
+}
+
+export interface BatchToBatchColour {
+  grade: string;
+  n_batches: number;
+  delta_E00_mean: number;
+  viscosity_sd_cP: number;
+}
+
+export interface EarlyWarning {
+  status: EvidenceStatus;
+  message: string;
+}
+
+export interface ColourQuality {
+  batch_id: string;
+  grade: string;
+  colour: ColourInfo;
+  viscosity: ViscosityInfo;
+  batch_to_batch: BatchToBatchColour;
+  early_warning: EarlyWarning;
+  missing_data?: string[];
+  source: string;
+}
+
+export interface WasteRiskSummary {
+  batches_at_risk: number;
+  quantity_at_risk_kg: number;
+}
+
+export interface AgeingModelStatus {
+  status: EvidenceStatus;
+  failure_probability?: number;
+  window_days?: number;
+}
+
+export interface BatchWasteRisk {
+  batch_id: string;
+  grade: string;
+  quantity_kg: number;
+  finished_at: string;
+  age_days: number;
+  storage_temp_C: number;
+  last_viscosity_cP: number;
+  spec_range_cP: [number, number];
+  ageing_model: AgeingModelStatus;
+  risk_level: 'OK' | 'ATTENTION' | 'HIGH' | 'NOT_ASSESSED';
+  reason: string;
+  recommended_action: string;
+}
+
+export interface WasteRisk {
+  summary: WasteRiskSummary;
+  batches: BatchWasteRisk[];
+  source: string;
+}
+
+export interface RecommendationItem {
+  rank: number;
+  action: string;
+  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  because: string[];
+  linked_fault?: string;
+  source: string;
+}
+
+export interface ValidationGroupSummary {
+  group: 'CALIBRATION' | 'VALIDATION';
+  batch_count: number;
+  mean_r2: number;
+  mean_rmse: number;
+  mean_mae: number;
+  metrics_by_var: Record<string, number>;
+  batches: string[];
+}
+
+

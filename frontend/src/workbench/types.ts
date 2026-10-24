@@ -19,7 +19,9 @@ export type WorkspaceTabId =
   | 'process_config'
   | 'matlab_status'
   | 'alarms'
-  | 'settings';
+  | 'settings'
+  | 'asset_health'
+  | 'quality_waste';
 
 export interface WorkspaceTab {
   id: WorkspaceTabId;
@@ -37,6 +39,8 @@ export type RibbonTab =
   | 'SCADA'
   | 'QUALITY'
   | 'FAULT DIAGNOSIS'
+  | 'ASSET HEALTH'
+  | 'QUALITY & WASTE'
   | 'TOOLS';
 
 export type ConsoleTab = 'messages' | 'console' | 'diagnostics' | 'results' | 'alarms';

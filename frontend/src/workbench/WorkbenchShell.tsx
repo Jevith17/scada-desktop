@@ -28,6 +28,8 @@ import { ProcessModelConfigWorkspace } from './workspaces/ProcessModelConfigWork
 import { ModelValidationWorkspace } from './workspaces/ModelValidationWorkspace';
 import { MatlabStatusWorkspace } from './workspaces/MatlabStatusWorkspace';
 import { AlarmsWorkspace } from './workspaces/AlarmsWorkspace';
+import { AssetHealthWorkspace } from './workspaces/AssetHealthWorkspace';
+import { QualityWasteWorkspace } from './workspaces/QualityWasteWorkspace';
 import { LargeVisualAlert } from './components/LargeVisualAlert';
 import { EmergencyOverlay } from './components/EmergencyOverlay';
 import { SettingsPage } from '../pages/SettingsPage';
@@ -49,6 +51,7 @@ import {
   FileCheck2,
   Terminal,
   Bell,
+  Palette,
 } from 'lucide-react';
 import { WorkspaceTabId } from './types';
 
@@ -74,6 +77,8 @@ const TAB_ICONS: Record<WorkspaceTabId, React.ReactNode> = {
   matlab_status: <Terminal className="w-3 h-3 text-[#D95757]" />,
   alarms: <Bell className="w-3 h-3 text-[#D95757]" />,
   settings: <Settings className="w-3 h-3 text-[#929292]" />,
+  asset_health: <ShieldCheck className="w-3 h-3 text-[#39B8D3]" />,
+  quality_waste: <Palette className="w-3 h-3 text-[#E5A83B]" />,
 };
 
 export const WorkbenchShell: React.FC = () => {
@@ -130,6 +135,10 @@ export const WorkbenchShell: React.FC = () => {
         return <MatlabStatusWorkspace />;
       case 'alarms':
         return <AlarmsWorkspace />;
+      case 'asset_health':
+        return <AssetHealthWorkspace />;
+      case 'quality_waste':
+        return <QualityWasteWorkspace />;
       case 'settings':
         return (
           <div className="p-4 overflow-y-auto h-full bg-[#1B1B1B]">

@@ -14,10 +14,15 @@ import (
 	"paintwise/internal/providers/matlab"
 	"paintwise/internal/providers/replay"
 	"paintwise/internal/services/alarms"
+	"paintwise/internal/services/assethealth"
+	"paintwise/internal/services/colour"
+	"paintwise/internal/services/decision"
 	"paintwise/internal/services/diagnosis"
 	"paintwise/internal/services/ingestion"
+	"paintwise/internal/services/maintenance"
 	"paintwise/internal/services/modelgen"
 	"paintwise/internal/services/validation"
+	"paintwise/internal/services/wasterisk"
 	"paintwise/internal/services/whatif"
 	"paintwise/internal/simulation"
 )
@@ -33,6 +38,11 @@ type Manager struct {
 	ingEngine      *ingestion.Engine
 	modelEngine    *modelgen.Engine
 	whatIfEngine   *whatif.Engine
+	maintSvc       *maintenance.Service
+	assetHealthSvc *assethealth.Service
+	colourSvc      *colour.Service
+	wasteSvc       *wasterisk.Service
+	decisionEng    *decision.Engine
 	simController  *simulation.Controller
 	provider       providers.DataProvider
 	liveData       models.LiveData
@@ -51,16 +61,31 @@ func NewManager(cfg *config.Config, db *database.DB) *Manager {
 	modelEng := modelgen.NewEngine(ingEng)
 	whatIfEng := whatif.NewEngine(ingEng)
 
+	maintSvc := maintenance.NewService(db)
+	assetHealthSvc := assethealth.NewService(db, maintSvc)
+	colourSvc := colour.NewService(db)
+	wasteSvc := wasterisk.NewService(db)
+	evalMode := cfg.EvaluationMode
+	if evalMode == "" {
+		evalMode = "full_cqw"
+	}
+	decisionEng := decision.NewEngine(db, diagEng, assetHealthSvc, colourSvc, wasteSvc, evalMode)
+
 	m := &Manager{
-		cfg:          cfg,
-		db:           db,
-		alarmEngine:  alarmEng,
-		diagEngine:   diagEng,
-		valEngine:    valEng,
-		ingEngine:    ingEng,
-		modelEngine:  modelEng,
-		whatIfEngine: whatIfEng,
-		trendBuffer:  make([]models.TrendPoint, 0, 1000),
+		cfg:            cfg,
+		db:             db,
+		alarmEngine:    alarmEng,
+		diagEngine:     diagEng,
+		valEngine:      valEng,
+		ingEngine:      ingEng,
+		modelEngine:    modelEng,
+		whatIfEngine:   whatIfEng,
+		maintSvc:       maintSvc,
+		assetHealthSvc: assetHealthSvc,
+		colourSvc:      colourSvc,
+		wasteSvc:       wasteSvc,
+		decisionEng:    decisionEng,
+		trendBuffer:    make([]models.TrendPoint, 0, 1000),
 		maxTrendSize: 500, // Bounded in-memory history (last ~8-15 min of 1-sec ticks)
 		startTime:    time.Now(),
 		liveData: models.LiveData{
@@ -587,5 +612,172 @@ func (m *Manager) GetPredefinedWhatIfScenarios() []models.WhatIfScenario {
 		return []models.WhatIfScenario{}
 	}
 	return m.whatIfEngine.GetPredefinedScenarios()
+}
+
+// =========================================================================
+// CQW (CONDITION, QUALITY, WASTE) MANAGER EXTENSIONS
+// =========================================================================
+
+func (m *Manager) GetAssetHealth() []models.AssetHealth {
+	if m.assetHealthSvc == nil {
+		return []models.AssetHealth{}
+	}
+	activeAlms := m.alarmEngine.GetActiveAlarms()
+	diag := m.diagEngine.GetCurrentDiagnosis()
+	return m.assetHealthSvc.GetAssetHealth(diag.ActiveFault, activeAlms)
+}
+
+func (m *Manager) GetMaintenanceForecast() models.MaintenanceForecast {
+	if m.maintSvc == nil {
+		return models.MaintenanceForecast{}
+	}
+	diag := m.diagEngine.GetCurrentDiagnosis()
+	return m.maintSvc.GetMaintenanceForecast(diag.ActiveFault)
+}
+
+func (m *Manager) AddInspectionRecord(rec models.InspectionRecord) error {
+	if m.db == nil {
+		return fmt.Errorf("database not initialized")
+	}
+	return m.db.AddInspectionRecord(rec)
+}
+
+func (m *Manager) ListInspectionRecords(assetID string) []models.InspectionRecord {
+	if m.db == nil {
+		return []models.InspectionRecord{}
+	}
+	recs, _ := m.db.ListInspectionRecords(assetID)
+	return recs
+}
+
+func (m *Manager) SetReferenceColour(grade string, lab []float64, tol float64, approver string) error {
+	if m.colourSvc == nil {
+		return fmt.Errorf("colour service uninitialized")
+	}
+	return m.colourSvc.SetReferenceColour(grade, lab, tol, approver)
+}
+
+func (m *Manager) GetColourQuality(batchID string) models.ColourQuality {
+	if m.colourSvc == nil {
+		return models.ColourQuality{}
+	}
+	if batchID == "" || batchID == "LIVE" {
+		m.mu.RLock()
+		batchID = m.liveData.BatchID
+		m.mu.RUnlock()
+	}
+	return m.colourSvc.GetColourQuality(batchID)
+}
+
+func (m *Manager) AddStorageRetest(rec models.StorageRetest) error {
+	if m.wasteSvc == nil {
+		return fmt.Errorf("waste risk service uninitialized")
+	}
+	return m.wasteSvc.AddStorageRetest(rec)
+}
+
+func (m *Manager) UpsertFinishedBatch(fb models.FinishedBatch) error {
+	if m.wasteSvc == nil {
+		return fmt.Errorf("waste risk service uninitialized")
+	}
+	return m.wasteSvc.UpsertFinishedBatch(fb)
+}
+
+func (m *Manager) GetWasteRisk() models.WasteRisk {
+	if m.wasteSvc == nil {
+		return models.WasteRisk{}
+	}
+	return m.wasteSvc.GetWasteRisk()
+}
+
+func (m *Manager) GetRecommendations() []models.RecommendationItem {
+	if m.decisionEng == nil {
+		return []models.RecommendationItem{}
+	}
+	m.mu.RLock()
+	activeBatch := m.liveData.BatchID
+	m.mu.RUnlock()
+
+	diag := m.diagEngine.GetCurrentDiagnosis()
+	activeAlms := m.alarmEngine.GetActiveAlarms()
+	return m.decisionEng.GenerateRecommendations(activeBatch, diag.ActiveFault, activeAlms)
+}
+
+func (m *Manager) SetEvaluationMode(mode string) string {
+	if m.decisionEng == nil {
+		return "decision engine uninitialized"
+	}
+	return m.decisionEng.SetEvaluationMode(mode)
+}
+
+func (m *Manager) GetEvaluationMode() string {
+	if m.decisionEng == nil {
+		return "full_cqw"
+	}
+	return m.decisionEng.GetEvaluationMode()
+}
+
+func (m *Manager) GetParameterSources() []models.ParameterSource {
+	if m.db == nil {
+		return []models.ParameterSource{}
+	}
+	sources, _ := m.db.GetParameterSources()
+	return sources
+}
+
+func (m *Manager) SetParameterSource(p models.ParameterSource) error {
+	if m.db == nil {
+		return fmt.Errorf("database not initialized")
+	}
+	return m.db.SetParameterSource(p)
+}
+
+func (m *Manager) GetFaultKnowledgeBase() map[string]models.FaultKnowledge {
+	if m.diagEngine == nil {
+		return map[string]models.FaultKnowledge{}
+	}
+	return m.diagEngine.GetKnowledgeBase()
+}
+
+func (m *Manager) GetValidationGroupMetrics() map[string]models.ValidationGroupSummary {
+	if m.valEngine == nil {
+		return map[string]models.ValidationGroupSummary{}
+	}
+	return m.valEngine.GetGroupValidationSummary()
+}
+
+func (m *Manager) ImportInspectionCSV(content string) (*models.IngestionResult, error) {
+	if m.ingEngine == nil {
+		return nil, fmt.Errorf("ingestion engine uninitialized")
+	}
+	return m.ingEngine.IngestInspectionCSV(content, m.db)
+}
+
+func (m *Manager) ImportColourCSV(content string) (*models.IngestionResult, error) {
+	if m.ingEngine == nil {
+		return nil, fmt.Errorf("ingestion engine uninitialized")
+	}
+	return m.ingEngine.IngestColourCSV(content, m.db)
+}
+
+func (m *Manager) ImportStorageCSV(content string) (*models.IngestionResult, error) {
+	if m.ingEngine == nil {
+		return nil, fmt.Errorf("ingestion engine uninitialized")
+	}
+	return m.ingEngine.IngestStorageCSV(content, m.db)
+}
+
+func (m *Manager) ImportInventoryCSV(content string) (*models.IngestionResult, error) {
+	if m.ingEngine == nil {
+		return nil, fmt.Errorf("ingestion engine uninitialized")
+	}
+	return m.ingEngine.IngestInventoryCSV(content, m.db)
+}
+
+func (m *Manager) RunEvaluationExperiment(outputPath string) (string, error) {
+	if m.decisionEng == nil {
+		return "", fmt.Errorf("decision engine uninitialized")
+	}
+	return m.decisionEng.RunEvaluationExperiment(outputPath)
 }
 

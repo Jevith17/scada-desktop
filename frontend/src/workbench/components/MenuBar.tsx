@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useWorkbench } from '../WorkbenchContext';
 import { useScada } from '../../state/ScadaContext';
+import { wailsApi } from '../../api/wailsBridge';
 import { FaultCode, AppMode } from '../../types/scada';
 import {
   FileText,
@@ -63,7 +64,30 @@ export const MenuBar: React.FC = () => {
 
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [evalMode, setEvalMode] = useState<string>('full_cqw');
   const menuBarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    wailsApi.getEvaluationMode().then((m) => {
+      if (m) setEvalMode(m);
+    });
+  }, []);
+
+  const handleEvalModeChange = async (mode: string) => {
+    await wailsApi.setEvaluationMode(mode);
+    setEvalMode(mode);
+    setOpenMenu(null);
+  };
+
+  const handleRunExperiment = async () => {
+    setOpenMenu(null);
+    const res = await wailsApi.runEvaluationExperiment('evaluation_experiment_alerts.csv');
+    if (res.success) {
+      alert(`4-Configuration Evaluation Experiment Completed!\nResults written to: ${res.csv_path}`);
+    } else {
+      alert(`Experiment failed: ${res.error}`);
+    }
+  };
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -130,12 +154,38 @@ export const MenuBar: React.FC = () => {
             <span className="text-[10px] text-[#929292]">Ctrl+S</span>
           </button>
           <div className="border-t border-[#383838] my-1" />
+          <div className="px-3 py-0.5 text-[9px] uppercase font-bold text-[#39B8D3]">Data Ingestion & CSVs:</div>
           <button
-            onClick={() => { openTab('data_import'); setOpenMenu(null); }}
+            onClick={() => { openTab('data'); setOpenMenu(null); }}
             className="w-full text-left px-3 py-1 hover:bg-[#24426b] hover:text-white flex items-center justify-between text-[#39B8D3]"
           >
-            <span>Import Plant Telemetry (CSV)...</span>
+            <span>Import Process Telemetry CSV...</span>
           </button>
+          <button
+            onClick={() => { openTab('asset_health'); setOpenMenu(null); }}
+            className="w-full text-left px-3 py-1 hover:bg-[#24426b] hover:text-white flex items-center justify-between text-[#F2F2F2]"
+          >
+            <span>Import Inspection Records CSV...</span>
+          </button>
+          <button
+            onClick={() => { openTab('quality_waste'); setOpenMenu(null); }}
+            className="w-full text-left px-3 py-1 hover:bg-[#24426b] hover:text-white flex items-center justify-between text-[#F2F2F2]"
+          >
+            <span>Import Colour Measurements CSV...</span>
+          </button>
+          <button
+            onClick={() => { openTab('quality_waste'); setOpenMenu(null); }}
+            className="w-full text-left px-3 py-1 hover:bg-[#24426b] hover:text-white flex items-center justify-between text-[#F2F2F2]"
+          >
+            <span>Import Storage Retests CSV...</span>
+          </button>
+          <button
+            onClick={() => { openTab('quality_waste'); setOpenMenu(null); }}
+            className="w-full text-left px-3 py-1 hover:bg-[#24426b] hover:text-white flex items-center justify-between text-[#F2F2F2]"
+          >
+            <span>Import Finished Inventory CSV...</span>
+          </button>
+          <div className="border-t border-[#383838] my-1" />
           <button
             onClick={() => { openTab('data_quality'); setOpenMenu(null); }}
             className="w-full text-left px-3 py-1 hover:bg-[#24426b] hover:text-white flex items-center justify-between text-[#4CAF72]"
@@ -480,7 +530,45 @@ export const MenuBar: React.FC = () => {
       id: 'tools',
       label: 'Tools',
       items: (
-        <div className="py-1 w-64 text-[11px] font-mono bg-[#242424] border border-[#454545] shadow-2xl">
+        <div className="py-1 w-72 text-[11px] font-mono bg-[#242424] border border-[#454545] shadow-2xl">
+          <div className="px-3 py-0.5 text-[9px] uppercase font-bold text-[#4C8DFF]">PaintTwin-CQW Evaluation Mode:</div>
+          <button
+            onClick={() => handleEvalModeChange('baseline')}
+            className="w-full text-left px-3 py-1 hover:bg-[#24426b] hover:text-white flex items-center justify-between text-[#F2F2F2]"
+          >
+            <span>1. Baseline (Heuristic alarms only)</span>
+            <span className="text-[#4CAF72]">{evalMode === 'baseline' ? '✓' : ''}</span>
+          </button>
+          <button
+            onClick={() => handleEvalModeChange('process_twin')}
+            className="w-full text-left px-3 py-1 hover:bg-[#24426b] hover:text-white flex items-center justify-between text-[#F2F2F2]"
+          >
+            <span>2. Process Twin (Physics-based validation)</span>
+            <span className="text-[#4CAF72]">{evalMode === 'process_twin' ? '✓' : ''}</span>
+          </button>
+          <button
+            onClick={() => handleEvalModeChange('condition_quality')}
+            className="w-full text-left px-3 py-1 hover:bg-[#24426b] hover:text-white flex items-center justify-between text-[#F2F2F2]"
+          >
+            <span>3. Condition & Quality (Process + Asset + Colour)</span>
+            <span className="text-[#4CAF72]">{evalMode === 'condition_quality' ? '✓' : ''}</span>
+          </button>
+          <button
+            onClick={() => handleEvalModeChange('full_cqw')}
+            className="w-full text-left px-3 py-1 hover:bg-[#24426b] hover:text-white flex items-center justify-between text-[#4C8DFF] font-bold"
+          >
+            <span>4. Full PaintTwin-CQW (All modules + Ranking)</span>
+            <span className="text-[#4CAF72]">{evalMode === 'full_cqw' ? '✓' : ''}</span>
+          </button>
+          <div className="border-t border-[#383838] my-1" />
+          <button
+            onClick={handleRunExperiment}
+            className="w-full text-left px-3 py-1 hover:bg-[#24426b] text-[#D6A548] font-bold flex items-center justify-between"
+          >
+            <span>Run 4-Mode Evaluation Experiment...</span>
+            <span className="text-[10px] text-[#929292]">CSV</span>
+          </button>
+          <div className="border-t border-[#383838] my-1" />
           <button
             onClick={() => { openTab('matlab_status'); setOpenMenu(null); }}
             className="w-full text-left px-3 py-1 hover:bg-[#24426b] hover:text-white text-[#D95757]"

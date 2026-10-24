@@ -59,6 +59,8 @@ const TAB_METADATA: Record<WorkspaceTabId, { title: string; subtitle?: string; c
   matlab_status: { title: 'MATLAB / Runtime Connection', subtitle: 'Engine Status & Bridge Inspector', closable: true },
   alarms: { title: 'Alarm Management & Trip', subtitle: 'Three-Tier Industrial Safety Hierarchy', closable: true },
   settings: { title: 'Station & System Config', subtitle: 'Hardware Bridges & WAL DB', closable: true },
+  asset_health: { title: 'Asset Health & Corrosion', subtitle: 'Ultrasonic Wall-Loss & CUSUM Degradation', closable: true },
+  quality_waste: { title: 'Quality & Waste Risk', subtitle: 'CIEDE2000 ΔE₀₀ & Finished Inventory Hold Time', closable: true },
 };
 
 const initialTabs: WorkspaceTab[] = [

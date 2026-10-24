@@ -19,6 +19,8 @@ type Config struct {
 	ReconnectIntervalSec int            `yaml:"reconnect_interval_sec"`
 	SampleIntervalMs     int            `yaml:"sample_interval_ms"`
 	LoggingLevel         string         `yaml:"logging_level"`
+	ValidationSeed       int            `yaml:"validation_seed"`
+	EvaluationMode       string         `yaml:"evaluation_mode"`
 }
 
 func DefaultConfig() *Config {
@@ -33,6 +35,8 @@ func DefaultConfig() *Config {
 		ReconnectIntervalSec: 5,
 		SampleIntervalMs:     1000,
 		LoggingLevel:         "INFO",
+		ValidationSeed:       42,
+		EvaluationMode:       "full_cqw",
 	}
 }
 

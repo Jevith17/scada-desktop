@@ -488,4 +488,295 @@ type WhatIfResult struct {
 	Thresholds        map[string]float64   `json:"thresholds"`
 }
 
+// =========================================================================
+// PAINTTWIN-CQW (CONDITION, QUALITY, WASTE) EXTENSION DATA CONTRACT (v3.0)
+// =========================================================================
+
+// EvidenceStatus represents the 4-state data readiness gate
+type EvidenceStatus string
+
+const (
+	StatusSupported        EvidenceStatus = "SUPPORTED"
+	StatusInsufficientData EvidenceStatus = "INSUFFICIENT_DATA"
+	StatusNotAssessed      EvidenceStatus = "NOT_ASSESSED"
+	StatusFutureCapability EvidenceStatus = "FUTURE_CAPABILITY"
+)
+
+// AssetState represents equipment physical condition
+type AssetState string
+
+const (
+	AssetStateHealthy       AssetState = "HEALTHY"
+	AssetStateDeteriorating AssetState = "DETERIORATING"
+	AssetStateInspectionDue AssetState = "INSPECTION_DUE"
+	AssetStateCritical      AssetState = "CRITICAL"
+	AssetStateNotAssessed   AssetState = "NOT_ASSESSED"
+)
+
+// FaultKnowledge represents a canonical fault signature from knowledge_base.yaml
+type FaultKnowledge struct {
+	Code               FaultCode       `yaml:"code" json:"code"`
+	Title              string          `yaml:"title" json:"title"`
+	Category           string          `yaml:"category" json:"category"`
+	Equipment          string          `yaml:"equipment" json:"equipment"`
+	Setpoint           float64         `yaml:"setpoint" json:"setpoint"`
+	Unit               string          `yaml:"unit" json:"unit"`
+	Confidence         FaultConfidence `yaml:"confidence" json:"confidence"`
+	DetectionThreshold float64         `yaml:"detection_threshold" json:"detection_threshold"`
+	Evidence           []string        `yaml:"evidence" json:"evidence"`
+	Description        string          `yaml:"description" json:"description"`
+	RecommendedAction  string          `yaml:"recommended_action" json:"recommended_action"`
+	Impact             string          `yaml:"impact" json:"impact"`
+}
+
+// ParameterSource registers traceability for every limit and engineering assumption (Fixes G4)
+type ParameterSource struct {
+	ParamKey   string  `json:"param_key"`
+	Value      float64 `json:"value"`
+	Unit       string  `json:"unit"`
+	SourceType string  `json:"source_type"` // measured / datasheet / specification / assumption
+	SourceRef  string  `json:"source_ref"`
+	Owner      string  `json:"owner"`
+	UpdatedAt  string  `json:"updated_at"`
+}
+
+// GradeSpec defines per-grade quality and hold limits from company documents
+type GradeSpec struct {
+	Grade              string  `json:"grade"`
+	ViscosityMin       float64 `json:"viscosity_min"`
+	ViscosityMax       float64 `json:"viscosity_max"`
+	PHMin              float64 `json:"ph_min"`
+	PHMax              float64 `json:"ph_max"`
+	DeltaE00Tol        float64 `json:"delta_e00_tol"`
+	HoldTimeAlertDays  int     `json:"hold_time_alert_days"`
+	SourceRef          string  `json:"source_ref"`
+}
+
+// InspectionRecord tracks physical ultrasonic wall-thickness measurement history
+type InspectionRecord struct {
+	ID            string  `json:"id"`
+	AssetID       string  `json:"asset_id"`
+	LocationID    string  `json:"location_id"`
+	InspectedAt   string  `json:"inspected_at"`
+	Method        string  `json:"method"` // e.g. "Ultrasonic Pulse-Echo"
+	ThicknessMM   float64 `json:"thickness_mm"`
+	UncertaintyMM float64 `json:"uncertainty_mm"`
+	Inspector     string  `json:"inspector"`
+	Notes         string  `json:"notes,omitempty"`
+}
+
+// AssetDesign stores engineer-approved minimum thickness and geometry
+type AssetDesign struct {
+	AssetID            string  `json:"asset_id"`
+	Material           string  `json:"material"`
+	DesignThicknessMM  float64 `json:"design_thickness_mm"`
+	MinAllowableMM     float64 `json:"min_allowable_mm"`
+	MinAllowableSource string  `json:"min_allowable_source"`
+}
+
+// ReferenceColour stores approved master shade coordinates
+type ReferenceColour struct {
+	Grade      string  `json:"grade"`
+	L          float64 `json:"l"`
+	A          float64 `json:"a"`
+	B          float64 `json:"b"`
+	Illuminant string  `json:"illuminant"` // e.g. "D65"
+	Observer   string  `json:"observer"`   // e.g. "10 deg"
+	ApprovedBy string  `json:"approved_by"`
+	ApprovedAt string  `json:"approved_at"`
+}
+
+// ColourMeasurement stores spectrophotometer reading for a batch
+type ColourMeasurement struct {
+	ID         string  `json:"id"`
+	BatchID    string  `json:"batch_id"`
+	L          float64 `json:"l"`
+	A          float64 `json:"a"`
+	B          float64 `json:"b"`
+	Instrument string  `json:"instrument"`
+	MeasuredAt string  `json:"measured_at"`
+}
+
+// FinishedBatch tracks warehouse inventory for hold-time and waste risk
+type FinishedBatch struct {
+	BatchID         string  `json:"batch_id"`
+	Grade           string  `json:"grade"`
+	FinishedAt      string  `json:"finished_at"`
+	QuantityKg      float64 `json:"quantity_kg"`
+	StorageLocation string  `json:"storage_location"`
+	StorageTempC    float64 `json:"storage_temp_C"`
+	Status          string  `json:"status"` // "RELEASED", "HOLD", "QUARANTINE"
+}
+
+// StorageRetest tracks viscosity / pH growth over time in storage
+type StorageRetest struct {
+	ID          string  `json:"id"`
+	BatchID     string  `json:"batch_id"`
+	TestedAt    string  `json:"tested_at"`
+	ViscosityCP float64 `json:"viscosity_cP"`
+	PH          float64 `json:"ph"`
+	OtherJSON   string  `json:"other_json,omitempty"`
+}
+
+// AssetHealth represents health evaluation for an equipment unit
+type AssetHealth struct {
+	AssetID     string         `json:"asset_id"`
+	Type        string         `json:"type"` // TANK_WALL, AGITATOR_MOTOR, FEED_PUMP, CONTROL_VALVE
+	State       AssetState     `json:"state"`
+	Status      EvidenceStatus `json:"status"`
+	Evidence    []string       `json:"evidence"`
+	MissingData []string       `json:"missing_data,omitempty"`
+	Source      string         `json:"source"` // go-reference, matlab, demo
+	LastUpdated string         `json:"last_updated"`
+}
+
+// CorrosionReading represents a single point in the thickness history
+type CorrosionReading struct {
+	Date        string  `json:"date"`
+	Location    string  `json:"location"`
+	ThicknessMM float64 `json:"thickness_mm"`
+}
+
+// RemainingLifeRange provides low, expected, and high remaining life estimates
+type RemainingLifeRange struct {
+	Low      float64 `json:"low"`
+	Expected float64 `json:"expected"`
+	High     float64 `json:"high"`
+}
+
+// CorrosionForecast details wall thickness prognosis
+type CorrosionForecast struct {
+	AssetID                 string             `json:"asset_id"`
+	Status                  EvidenceStatus     `json:"status"`
+	LastInspection          string             `json:"last_inspection"`
+	Readings                []CorrosionReading `json:"readings"`
+	CorrosionRateMMPerYear  float64            `json:"corrosion_rate_mm_per_year"`
+	MinAllowableMM          float64            `json:"min_allowable_mm"`
+	RemainingLifeYears      RemainingLifeRange `json:"remaining_life_years"`
+	Caveat                  string             `json:"caveat"`
+}
+
+// RotatingEquipmentTrend tracks degradation drift on rotating drives
+type RotatingEquipmentTrend struct {
+	AssetID           string `json:"asset_id"`
+	Trend             string `json:"trend"` // "WORSENING", "STABLE", "IMPROVING", "NOT_ASSESSED"
+	RecommendedAction string `json:"recommended_action"`
+}
+
+// MaintenancePriorityItem ranks maintenance actions by urgency
+type MaintenancePriorityItem struct {
+	Rank    int    `json:"rank"`
+	AssetID string `json:"asset_id"`
+	Reason  string `json:"reason"`
+}
+
+// MaintenanceForecast combines corrosion and rotating equipment prognostics
+type MaintenanceForecast struct {
+	Corrosion         CorrosionForecast         `json:"corrosion"`
+	RotatingEquipment []RotatingEquipmentTrend  `json:"rotating_equipment"`
+	PriorityRanking   []MaintenancePriorityItem `json:"priority_ranking"`
+	Source            string                    `json:"source"`
+}
+
+// ColourInfo represents reference vs measured color comparison
+type ColourInfo struct {
+	Status            EvidenceStatus `json:"status"`
+	ReferenceLab      [3]float64     `json:"reference_Lab"`
+	MeasuredLab       [3]float64     `json:"measured_Lab"`
+	DeltaE00          float64        `json:"delta_E00"`
+	ToleranceDeltaE00 float64        `json:"tolerance_delta_E00"`
+	Result            string         `json:"result"` // "WITHIN_TOLERANCE", "OUT_OF_TOLERANCE", "NOT_ASSESSED"
+}
+
+// ViscosityInfo represents viscosity conformance
+type ViscosityInfo struct {
+	ValueCP  float64    `json:"value_cP"`
+	RangeCP  [2]float64 `json:"range_cP"`
+	Result   string     `json:"result"` // "WITHIN_SPECIFICATION", "OUT_OF_SPECIFICATION"
+}
+
+// BatchToBatchColour represents variation statistics across the same grade
+type BatchToBatchColour struct {
+	Grade         string  `json:"grade"`
+	NBatches      int     `json:"n_batches"`
+	DeltaE00Mean  float64 `json:"delta_E00_mean"`
+	ViscositySDCP float64 `json:"viscosity_sd_cP"`
+}
+
+// EarlyWarning indicates whether trend is heading off-spec
+type EarlyWarning struct {
+	Status  EvidenceStatus `json:"status"` // SUPPORTED, INSUFFICIENT_DATA
+	Message string         `json:"message"`
+}
+
+// ColourQuality bundles batch color conformity and viscosity metrics
+type ColourQuality struct {
+	BatchID      string             `json:"batch_id"`
+	Grade        string             `json:"grade"`
+	Colour       ColourInfo         `json:"colour"`
+	Viscosity    ViscosityInfo      `json:"viscosity"`
+	BatchToBatch BatchToBatchColour `json:"batch_to_batch"`
+	EarlyWarning EarlyWarning       `json:"early_warning"`
+	MissingData  []string           `json:"missing_data,omitempty"`
+	Source       string             `json:"source"`
+}
+
+// WasteRiskSummary summarizes overall inventory risk
+type WasteRiskSummary struct {
+	BatchesAtRisk    int     `json:"batches_at_risk"`
+	QuantityAtRiskKg float64 `json:"quantity_at_risk_kg"`
+}
+
+// AgeingModelStatus wraps the future-capability ageing model state
+type AgeingModelStatus struct {
+	Status             EvidenceStatus `json:"status"`
+	FailureProbability float64        `json:"failure_probability,omitempty"`
+	WindowDays         int            `json:"window_days,omitempty"`
+}
+
+// BatchWasteRisk evaluates an individual finished batch hold risk
+type BatchWasteRisk struct {
+	BatchID           string            `json:"batch_id"`
+	Grade             string            `json:"grade"`
+	QuantityKg        float64           `json:"quantity_kg"`
+	FinishedAt        string            `json:"finished_at"`
+	AgeDays           int               `json:"age_days"`
+	StorageTempC      float64           `json:"storage_temp_C"`
+	LastViscosityCP   float64           `json:"last_viscosity_cP"`
+	SpecRangeCP       [2]float64        `json:"spec_range_cP"`
+	AgeingModel       AgeingModelStatus `json:"ageing_model"`
+	RiskLevel         string            `json:"risk_level"` // "OK", "ATTENTION", "HIGH", "NOT_ASSESSED"
+	Reason            string            `json:"reason"`
+	RecommendedAction string            `json:"recommended_action"`
+}
+
+// WasteRisk represents warehouse waste risk output
+type WasteRisk struct {
+	Summary WasteRiskSummary `json:"summary"`
+	Batches []BatchWasteRisk `json:"batches"`
+	Source  string           `json:"source"`
+}
+
+// RecommendationItem represents a decision engine output
+type RecommendationItem struct {
+	Rank        int      `json:"rank"`
+	Action      string   `json:"action"` // Allowed: INSPECT_TANK_WALL, VERIFY_TEMPERATURE_SENSOR, INVESTIGATE_FEED_PUMP, INSPECT_VALVE, INSPECT_AGITATOR, SAMPLE_AND_RETEST, REVIEW_BATCH_HOLD_TIME, COLLECT_MISSING_DATA
+	Priority    string   `json:"priority"` // HIGH, MEDIUM, LOW
+	Because     []string `json:"because"`  // Condition, Process/Quality, Maintenance, Waste Risk
+	LinkedFault string   `json:"linked_fault,omitempty"`
+	Source      string   `json:"source"`
+}
+
+// ValidationGroupSummary represents 70/30 deterministic batch validation split
+type ValidationGroupSummary struct {
+	Group        string             `json:"group"` // "CALIBRATION" (7 batches) or "VALIDATION" (3 batches)
+	BatchCount   int                `json:"batch_count"`
+	MeanR2       float64            `json:"mean_r2"`
+	MeanRMSE     float64            `json:"mean_rmse"`
+	MeanMAE      float64            `json:"mean_mae"`
+	MetricsByVar map[string]float64 `json:"metrics_by_var"`
+	Batches      []string           `json:"batches"`
+}
+
+
 

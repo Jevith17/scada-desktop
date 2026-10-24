@@ -6,6 +6,10 @@ export function AcknowledgeAlarm(arg1:string,arg2:string):Promise<boolean>;
 
 export function AcknowledgeAllAlarms(arg1:string):Promise<boolean>;
 
+export function AddInspectionRecord(arg1:models.InspectionRecord):Promise<Record<string, any>>;
+
+export function AddStorageRetest(arg1:models.StorageRetest):Promise<Record<string, any>>;
+
 export function ClearFault():Promise<string>;
 
 export function GenerateProcessModel(arg1:string):Promise<models.ProcessModelGraph>;
@@ -16,6 +20,8 @@ export function GetAlarmConfig():Promise<models.AlarmConfig>;
 
 export function GetAlarms():Promise<Array<models.Alarm>>;
 
+export function GetAssetHealth():Promise<Array<models.AssetHealth>>;
+
 export function GetBatchDetails(arg1:string):Promise<Record<string, any>>;
 
 export function GetBatchList():Promise<Array<models.BatchMetadata>>;
@@ -24,17 +30,29 @@ export function GetBatchValidation(arg1:string):Promise<Record<string, any>>;
 
 export function GetBatches():Promise<Array<models.Batch>>;
 
+export function GetColourQuality(arg1:string):Promise<models.ColourQuality>;
+
 export function GetDiagnosis():Promise<models.Diagnosis>;
 
 export function GetEmergencyStatus():Promise<models.EmergencyStatus>;
+
+export function GetEvaluationMode():Promise<string>;
+
+export function GetFaultKnowledgeBase():Promise<Record<string, models.FaultKnowledge>>;
 
 export function GetIngestionSummary():Promise<models.IngestionResult>;
 
 export function GetLiveData():Promise<models.LiveData>;
 
+export function GetMaintenanceForecast():Promise<models.MaintenanceForecast>;
+
 export function GetMatlabConsoleLogs():Promise<Array<models.MatlabConsoleLog>>;
 
+export function GetParameterSources():Promise<Array<models.ParameterSource>>;
+
 export function GetPredefinedWhatIfScenarios():Promise<Array<models.WhatIfScenario>>;
+
+export function GetRecommendations():Promise<Array<models.RecommendationItem>>;
 
 export function GetSimulationState():Promise<string>;
 
@@ -46,11 +64,25 @@ export function GetTrends(arg1:string):Promise<Array<models.TrendPoint>>;
 
 export function GetValidationBatches():Promise<Array<Record<string, any>>>;
 
+export function GetValidationGroupMetrics():Promise<Record<string, models.ValidationGroupSummary>>;
+
+export function GetWasteRisk():Promise<models.WasteRisk>;
+
+export function ImportColourCSV(arg1:string):Promise<Record<string, any>>;
+
+export function ImportInspectionCSV(arg1:string):Promise<Record<string, any>>;
+
+export function ImportInventoryCSV(arg1:string):Promise<Record<string, any>>;
+
+export function ImportStorageCSV(arg1:string):Promise<Record<string, any>>;
+
 export function IngestCSV(arg1:string,arg2:string):Promise<Record<string, any>>;
 
 export function IngestFromFile(arg1:string):Promise<Record<string, any>>;
 
 export function InjectFault(arg1:string):Promise<string>;
+
+export function ListInspectionRecords(arg1:string):Promise<Array<models.InspectionRecord>>;
 
 export function LoadPreloadedDataset(arg1:string):Promise<Record<string, any>>;
 
@@ -64,9 +96,17 @@ export function ResetEmergency():Promise<void>;
 
 export function ResumeReplay():Promise<void>;
 
+export function RunEvaluationExperiment(arg1:string):Promise<Record<string, any>>;
+
 export function SetActiveBatch(arg1:string):Promise<Record<string, any>>;
 
 export function SetAlarmConfig(arg1:models.AlarmConfig):Promise<void>;
+
+export function SetEvaluationMode(arg1:string):Promise<string>;
+
+export function SetParameterSource(arg1:models.ParameterSource):Promise<Record<string, any>>;
+
+export function SetReferenceColour(arg1:string,arg2:Array<number>,arg3:number,arg4:string):Promise<Record<string, any>>;
 
 export function SetReplaySpeed(arg1:number):Promise<void>;
 
@@ -83,3 +123,5 @@ export function TestMATLABConnection(arg1:string):Promise<Record<string, any>>;
 export function TriggerEmergencyTrip(arg1:string,arg2:string):Promise<void>;
 
 export function TriggerTestEmergency():Promise<void>;
+
+export function UpsertFinishedBatch(arg1:models.FinishedBatch):Promise<Record<string, any>>;
